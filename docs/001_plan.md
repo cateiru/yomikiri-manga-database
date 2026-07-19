@@ -30,6 +30,8 @@
 | データベース         | Neon（Serverless PostgreSQL）        | Workers からは `@neondatabase/serverless` ドライバで接続  |
 | バッチサーバ         | さくらVPS 上の Node.js（TypeScript） | systemd timer で定期実行                                  |
 | パッケージ管理       | pnpm workspace（monorepo）           |                                                           |
+| ローカル開発環境     | Docker Compose                       | db / web / batch をすべてコンテナで起動（12 章）          |
+| CI                   | GitHub Actions                       | lint / typecheck / test / build を検証（13 章）           |
 
 ## 3. システム構成
 
@@ -264,6 +266,9 @@ pnpm workspace による monorepo 構成とする。
 
 ```text
 yomikiri-manga-database/
+├── .github/
+│   └── workflows/
+│       └── ci.yml    # CI（13 章）
 ├── apps/
 │   ├── web/          # Next.js（Cloudflare Workers + OpenNext）
 │   └── batch/        # バッチ（さくらVPS で実行）
@@ -271,6 +276,7 @@ yomikiri-manga-database/
 │   └── db/           # Drizzle スキーマ・マイグレーション（web / batch で共有）
 ├── docs/
 │   └── 001_plan.md   # 本仕様書
+├── compose.yaml      # ローカル開発環境（12 章）
 ├── sources.json      # クロール対象サービス定義
 ├── package.json
 └── pnpm-workspace.yaml
@@ -287,7 +293,35 @@ yomikiri-manga-database/
 - **法的配慮**: 収集するのはタイトル等の事実情報とリンクのみとし、
   漫画本文・画像データの複製は行わない
 
-## 12. 今後の拡張（スコープ外）
+## 12. ローカル開発環境
+
+ローカル環境は Docker Compose で起動する。Neon は本番専用とし、
+ローカルの DB には PostgreSQL コンテナを使用する。
+
+| サービス | 内容                                       | 起動方法                        |
+| -------- | ------------------------------------------ | ------------------------------- |
+| `db`     | PostgreSQL。named volume でデータを永続化  | `docker compose up`             |
+| `web`    | Next.js 開発サーバ（ポート 3000）          | `docker compose up`             |
+| `batch`  | バッチの手動実行用（one-shot）             | `docker compose run --rm batch` |
+
+- `web` / `batch` は Node.js コンテナにリポジトリを bind mount し、pnpm で実行する
+- `batch` は常駐プロセスではないため `profiles` を指定し、
+  `docker compose up` の起動対象から除外する
+- `DATABASE_URL` は compose 内で `db` サービスを指す値を設定し、
+  ローカルでの個別の環境変数設定を不要にする
+- セットアップ手順・compose の詳細は
+  [007 ローカル開発環境・CI](./plans/007_ローカル開発環境・CI.md) を参照
+
+## 13. CI
+
+GitHub Actions（`.github/workflows/ci.yml`）で Pull Request と main への push を検証する。
+
+- 実行内容: `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build`
+- Node.js バージョンは `.node-version` に従い、pnpm store のキャッシュを利用する
+- デプロイワークフロー（CD）は当面設定しない。
+  将来 [006 デプロイ・運用](./plans/006_デプロイ・運用.md) で CI とは別のワークフローとして追加する
+
+## 14. 今後の拡張（スコープ外）
 
 - ユーザー認証と投票履歴の引き継ぎ
 - ジャンルに基づくレコメンド

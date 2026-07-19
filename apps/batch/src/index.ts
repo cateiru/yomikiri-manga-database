@@ -1,3 +1,3 @@
-import type { DbPlaceholder } from "@yomikiri/db";
+import type { oneshots } from "@yomikiri/db/schema";
 
-export type BatchPlaceholder = DbPlaceholder;
+export type BatchPlaceholder = typeof oneshots;

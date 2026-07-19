@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/cateiru/yomikiri-manga-database/sources.schema.json",
+  "title": "Sources",
+  "description": "クロール対象サービスの定義",
+  "type": "object",
+  "required": ["sources"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/source"
+      }
+    }
+  },
+  "definitions": {
+    "source": {
+      "type": "object",
+      "required": ["key", "name", "listUrl", "parser", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "サービスの一意なキー。DB の source_key に保存する"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "表示用のサービス名"
+        },
+        "listUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "読み切り一覧ページの URL"
+        },
+        "parser": {
+          "type": "string",
+          "enum": ["gigaviewer"],
+          "description": "使用するパーサー種別"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "false にするとクロール対象から除外する"
+        }
+      }
+    }
+  }
+}

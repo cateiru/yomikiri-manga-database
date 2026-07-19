@@ -1,0 +1,12 @@
+{
+  "$schema": "./sources.schema.json",
+  "sources": [
+    {
+      "key": "comic-days",
+      "name": "コミックDAYS",
+      "listUrl": "https://comic-days.com/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    }
+  ]
+}

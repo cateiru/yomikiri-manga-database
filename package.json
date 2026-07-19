@@ -1,0 +1,19 @@
+{
+  "name": "yomikiri-manga-database",
+  "private": true,
+  "packageManager": "pnpm@11.3.0",
+  "scripts": {
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "build": "pnpm -r --if-present run build",
+    "validate:sources": "ajv validate --spec=draft7 -c ajv-formats -s sources.schema.json -d sources.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
+    "ajv-cli": "^5.0.0",
+    "ajv-formats": "^3.0.1",
+    "typescript": "^7.0.2"
+  }
+}

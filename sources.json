@@ -7,6 +7,97 @@
       "listUrl": "https://comic-days.com/oneshot",
       "parser": "gigaviewer",
       "enabled": true
+    },
+    {
+      "key": "jump-plus",
+      "name": "少年ジャンプ+",
+      "listUrl": "https://shonenjumpplus.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "tonarinoyj",
+      "name": "となりのヤングジャンプ",
+      "listUrl": "https://tonarinoyj.jp/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "kuragebunch",
+      "name": "くらげバンチ",
+      "listUrl": "https://kuragebunch.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "comic-gardo",
+      "name": "コミックガルド",
+      "listUrl": "https://comic-gardo.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "zenon-plus",
+      "name": "ゼノンプラス",
+      "listUrl": "https://comic-zenon.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "magcomi",
+      "name": "マグコミ",
+      "listUrl": "https://magcomi.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "comic-action",
+      "name": "コミックアクション",
+      "listUrl": "https://comic-action.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "comic-trail",
+      "name": "コミックトレイル",
+      "listUrl": "https://comic-trail.com/series#oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "mangatime-square",
+      "name": "まんがタイムスクエア",
+      "listUrl": "https://mangatime-square.com/series#extra",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "sunday-webry",
+      "name": "サンデーうぇぶり",
+      "listUrl": "https://www.sunday-webry.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "comic-earthstar",
+      "name": "コミックアース・スター",
+      "listUrl": "https://comic-earthstar.com/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "ichijin-plus",
+      "name": "一迅プラス",
+      "listUrl": "https://ichicomi.com/series#oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
+    },
+    {
+      "key": "comic-y-ours",
+      "name": "COMIC Y-OURS",
+      "listUrl": "https://comic-y-ours.com/series/oneshot",
+      "parser": "gigaviewer",
+      "enabled": true
     }
   ]
 }

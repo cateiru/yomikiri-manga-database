@@ -69,7 +69,12 @@ flowchart LR
 ## 4. 対象サイト定義（sources.json）
 
 クロール対象のサービスはリポジトリ直下の `sources.json` で宣言的に管理する。
-GigaViewer 系サイトは HTML 構造が共通のため、パーサーは `gigaviewer` の 1 種類から始める。
+
+GigaViewer で共通化されているのはビューワー・履歴ページの機構のみで、
+トップページや作品一覧ページの HTML 構造は掲載元（出版社・レーベル）ごとに異なる。
+そのため `sources.json` の `parser` 種別は「GigaViewer 採用サービス」を示す
+`gigaviewer` の 1 種類のみだが、一覧ページの抽出ロジックはソースごとに実装する必要がある
+（詳細は [003 バッチクローラー](./plans/003_バッチクローラー.md) を参照）。
 
 ```json
 {
@@ -209,6 +214,7 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 2. 各ソースの `listUrl` に HTTP GET でアクセスする
 3. `parser` に対応するパーサー（`gigaviewer`）で HTML をパースし、
    タイトル・作者・サムネイル URL・ビューワー URL・掲載日時を抽出する
+   （一覧ページの構造はソースごとに異なるため、抽出処理は `source.key` 単位で実装する）
 4. `(source_key, viewer_url)` をキーに `oneshots` へ upsert する
    - 新規: `first_seen_at` と `last_seen_at` に現在時刻を設定
    - 既存: メタデータと `last_seen_at` を更新

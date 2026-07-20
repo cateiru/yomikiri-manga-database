@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!packages/db/drizzle"]
+    "includes": ["**", "!packages/db/drizzle", "!apps/batch/test/fixtures"]
   },
   "formatter": {
     "enabled": true,

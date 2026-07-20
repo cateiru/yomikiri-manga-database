@@ -1,0 +1,80 @@
+:root {
+  /* カラー */
+  --color-ink: #2e3142;
+  --color-bg: #fff;
+  --color-ink-70: #6c6f7b;
+  --color-ink-40: #abadb3;
+  --color-ink-15: #e0e0e3;
+  --color-ink-5: #f5f5f6;
+  --color-error: #c73e3e;
+
+  /* タイポグラフィ */
+  --font-sans:
+    system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP",
+    sans-serif;
+  --text-xl: 24px;
+  --text-lg: 18px;
+  --text-md: 15px;
+  --text-sm: 13px;
+  --text-xs: 11px;
+
+  /* ボーダー・シャドウ・角丸 */
+  --border-width: 2px;
+  --border-width-bold: 3px;
+  --radius: 0;
+  --shadow-sm: 4px 4px 0 0 var(--color-ink);
+  --shadow-lg: 8px 8px 0 0 var(--color-ink);
+
+  /* スペーシング */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.4;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

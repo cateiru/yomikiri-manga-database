@@ -6,5 +6,16 @@ dist/
 .env
 .env.*
 !.env.example
+!.dev.vars.example
 
 .DS_Store
+*.tsbuildinfo
+
+# Next.js
+.next/
+next-env.d.ts
+
+# OpenNext / Cloudflare
+.open-next/
+.wrangler/
+apps/web/cloudflare-env.d.ts

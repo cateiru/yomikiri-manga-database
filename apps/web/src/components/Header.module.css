@@ -1,0 +1,15 @@
+.header {
+  background: var(--color-bg);
+  border-bottom: var(--border-width-bold) solid var(--color-ink);
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-6);
+}
+
+.logo {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}

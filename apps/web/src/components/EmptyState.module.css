@@ -1,0 +1,10 @@
+.emptyState {
+  border: 2px dashed var(--color-ink-40);
+  color: var(--color-ink-70);
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.emptyState p {
+  margin: 0;
+}

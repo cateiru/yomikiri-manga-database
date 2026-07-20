@@ -204,6 +204,16 @@ export async function getOneshotsPage(
   return fetchOneshotsPage(getDb(), genreKeys, cursor);
 }
 
+export async function getOneshotsCount(): Promise<number> {
+  const db = getDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(oneshots)
+    .where(isNotNull(oneshots.title));
+
+  return Number(row?.count ?? 0);
+}
+
 export async function getOneshotById(id: number): Promise<OneshotListItem | null> {
   const db = getDb();
   const rows = await db

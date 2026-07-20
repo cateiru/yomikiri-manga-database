@@ -61,6 +61,7 @@
 .body {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: var(--space-1);
   padding: var(--space-3);
 }
@@ -81,7 +82,13 @@
   color: var(--color-ink-70);
 }
 
-.author,
+.author {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-70);
+  overflow-wrap: break-word;
+}
+
 .source {
   margin: 0;
   font-size: var(--text-sm);
@@ -89,6 +96,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
 
 .favicon {

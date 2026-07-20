@@ -2,6 +2,7 @@ const ANONYMOUS_USER_ID_KEY = "anonymousUserId";
 const PENDING_READ_KEY = "pendingRead";
 const VOTED_ONESHOT_IDS_KEY = "votedOneshotIds";
 const SKIPPED_ONESHOT_IDS_KEY = "skippedOneshotIds";
+const READ_ONESHOT_IDS_KEY = "readOneshotIds";
 
 export interface PendingRead {
   oneshotId: number;
@@ -78,5 +79,16 @@ export function addSkippedOneshotId(oneshotId: number): void {
   const ids = getSkippedOneshotIds();
   if (!ids.includes(oneshotId)) {
     writeJson(SKIPPED_ONESHOT_IDS_KEY, [...ids, oneshotId]);
+  }
+}
+
+export function getReadOneshotIds(): number[] {
+  return readIdList(READ_ONESHOT_IDS_KEY);
+}
+
+export function addReadOneshotId(oneshotId: number): void {
+  const ids = getReadOneshotIds();
+  if (!ids.includes(oneshotId)) {
+    writeJson(READ_ONESHOT_IDS_KEY, [...ids, oneshotId]);
   }
 }

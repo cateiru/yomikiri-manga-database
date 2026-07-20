@@ -9,15 +9,16 @@ import { ThumbnailPlaceholder } from "./ThumbnailPlaceholder";
 
 interface OneshotCardProps {
   item: OneshotListItem;
+  isRead?: boolean;
 }
 
-export function OneshotCard({ item }: OneshotCardProps) {
+export function OneshotCard({ item, isRead = false }: OneshotCardProps) {
   const sourceName = getSourceName(item.sourceKey);
   const faviconUrl = getSourceFaviconUrl(item.sourceKey);
 
   return (
     <a
-      className={styles.card}
+      className={isRead ? `${styles.card} ${styles.read}` : styles.card}
       href={item.viewerUrl}
       target="_blank"
       rel="noopener noreferrer"

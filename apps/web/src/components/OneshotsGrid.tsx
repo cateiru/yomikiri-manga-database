@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import styles from "@/app/page.module.css";
+import { getReadOneshotIds } from "@/lib/clientStorage";
 import type { Genre } from "@/lib/genres";
 import type { OneshotListItem, OneshotsCursor } from "@/lib/oneshots";
 import { loadMoreOneshotsAction } from "@/lib/oneshotsActions";
@@ -27,8 +28,22 @@ export function OneshotsGrid({
   const [cursor, setCursor] = useState(initialCursor);
   const [isPending, startTransition] = useTransition();
   const [loadError, setLoadError] = useState(false);
+  const [readIds, setReadIds] = useState<Set<number>>(new Set());
   const loadingRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setReadIds(new Set(getReadOneshotIds()));
+  }, []);
+
+  const markRead = useCallback((oneshotId: number) => {
+    setReadIds((prev) => {
+      if (prev.has(oneshotId)) {
+        return prev;
+      }
+      return new Set(prev).add(oneshotId);
+    });
+  }, []);
 
   const loadMore = useCallback(() => {
     if (!cursor || loadingRef.current) {
@@ -75,7 +90,7 @@ export function OneshotsGrid({
       <ul className={styles.grid}>
         {items.map((item) => (
           <li key={item.id}>
-            <OneshotCard item={item} />
+            <OneshotCard item={item} isRead={readIds.has(item.id)} />
           </li>
         ))}
       </ul>
@@ -89,7 +104,7 @@ export function OneshotsGrid({
           ) : null}
         </div>
       ) : null}
-      <VoteModalController items={items} genres={genres} />
+      <VoteModalController items={items} genres={genres} onRead={markRead} />
     </>
   );
 }

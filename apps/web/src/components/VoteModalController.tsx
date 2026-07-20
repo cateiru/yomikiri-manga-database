@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  addReadOneshotId,
   addSkippedOneshotId,
   addVotedOneshotId,
   clearPendingRead,
@@ -18,10 +19,19 @@ import { VoteModal } from "./VoteModal";
 interface VoteModalControllerProps {
   items: OneshotListItem[];
   genres: Genre[];
+  onRead?: (oneshotId: number) => void;
 }
 
-export function VoteModalController({ items, genres }: VoteModalControllerProps) {
+export function VoteModalController({ items, genres, onRead }: VoteModalControllerProps) {
   const [target, setTarget] = useState<OneshotListItem | null>(null);
+
+  const markRead = useCallback(
+    (oneshotId: number) => {
+      addReadOneshotId(oneshotId);
+      onRead?.(oneshotId);
+    },
+    [onRead],
+  );
 
   const checkPendingRead = useCallback(() => {
     const result = evaluatePendingRead({
@@ -38,6 +48,7 @@ export function VoteModalController({ items, genres }: VoteModalControllerProps)
 
     const item = items.find((candidate) => candidate.id === result.oneshotId);
     if (item) {
+      markRead(result.oneshotId);
       setTarget(item);
       return;
     }
@@ -47,10 +58,11 @@ export function VoteModalController({ items, genres }: VoteModalControllerProps)
     // の安全網として単体取得する
     void fetchOneshotByIdAction(result.oneshotId).then((fallback) => {
       if (fallback) {
+        markRead(result.oneshotId);
         setTarget(fallback);
       }
     });
-  }, [items]);
+  }, [items, markRead]);
 
   useEffect(() => {
     checkPendingRead();

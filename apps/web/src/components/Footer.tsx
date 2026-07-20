@@ -7,13 +7,6 @@ export function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <p>© {year} cateiru</p>
-        <a
-          href="https://github.com/cateiru/yomikiri-manga-database"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GitHub
-        </a>
       </div>
     </footer>
   );

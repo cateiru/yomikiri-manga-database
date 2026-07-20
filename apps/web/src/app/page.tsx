@@ -22,7 +22,7 @@ export default async function TopPage({ searchParams }: TopPageProps) {
   const { genre } = await searchParams;
   const genreKeys = normalizeGenreParam(genre);
 
-  const db = getDb();
+  const db = await getDb();
   const [genres, firstPage] = await Promise.all([listGenres(db), getOneshotsPage(genreKeys)]);
 
   return (

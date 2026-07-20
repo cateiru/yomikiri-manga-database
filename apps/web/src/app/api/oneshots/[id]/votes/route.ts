@@ -41,7 +41,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "invalid body" }, { status: 400 });
   }
 
-  const db = getDb();
+  const db = await getDb();
 
   const oneshotRows = await db
     .select({ id: oneshots.id })

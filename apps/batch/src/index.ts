@@ -2,7 +2,8 @@ import "dotenv/config";
 import { fileURLToPath } from "node:url";
 import { createDb } from "@yomikiri/db/client-node";
 import { loadEnabledSources } from "./config/sources.js";
-import { runCrawl } from "./crawler/run.js";
+import { collectUrls } from "./crawler/collectUrls.js";
+import { fetchDetails } from "./crawler/fetchDetails.js";
 import { log } from "./logger.js";
 
 const sourcesPath = fileURLToPath(new URL("../../../sources.json", import.meta.url));
@@ -16,10 +17,17 @@ async function main() {
   const sources = loadEnabledSources(sourcesPath);
   const db = createDb(databaseUrl);
 
-  const results = await runCrawl(db, sources);
-  const hasError = results.some((result) => result.error !== null);
+  // 1. 各サイトの読み切り一覧ページからビューワー URL を収集してキュー（oneshots）に登録する
+  const collectResults = await collectUrls(db, sources);
+  log("info", "URL 収集バッチが完了しました", { results: collectResults });
 
-  log("info", "バッチ実行が完了しました", { results });
+  // 2. キューにある詳細未取得のビューワー URL へアクセスし、詳細を取得する
+  const detailResults = await fetchDetails(db, sources);
+  log("info", "詳細取得バッチが完了しました", { results: detailResults });
+
+  const hasError =
+    collectResults.some((result) => result.error !== null) ||
+    detailResults.some((result) => result.error !== null);
 
   if (hasError) {
     process.exitCode = 1;

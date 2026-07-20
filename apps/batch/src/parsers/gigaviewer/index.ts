@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import type { Source } from "../../config/sources.js";
-import type { ParsedOneshot, Parser } from "../types.js";
+import type { ParsedOneshotUrl, Parser } from "../types.js";
 import { extract as comicAction } from "./sources/comic-action.js";
 import { extract as comicDays } from "./sources/comic-days.js";
 import { extract as comicEarthstar } from "./sources/comic-earthstar.js";
@@ -16,7 +16,7 @@ import { extract as sundayWebry } from "./sources/sunday-webry.js";
 import { extract as tonarinoyj } from "./sources/tonarinoyj.js";
 import { extract as zenonPlus } from "./sources/zenon-plus.js";
 
-type Extractor = ($: cheerio.CheerioAPI, source: Source) => ParsedOneshot[];
+type Extractor = ($: cheerio.CheerioAPI, source: Source) => ParsedOneshotUrl[];
 
 const registry: Record<string, Extractor> = {
   "comic-days": comicDays,

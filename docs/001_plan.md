@@ -109,20 +109,23 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 
 ### 5.1 oneshots（読み切り漫画）
 
-| カラム          | 型          | 制約     | 説明                                          |
-| --------------- | ----------- | -------- | --------------------------------------------- |
-| `id`            | serial      | PK       | 内部 ID                                       |
-| `source_key`    | text        | not null | 掲載サービスのキー（`sources.json` の `key`） |
-| `title`         | text        | not null | タイトル                                      |
-| `author`        | text        |          | 作者名                                        |
-| `thumbnail_url` | text        |          | サムネイル画像 URL                            |
-| `viewer_url`    | text        | not null | ビューワーページ URL                          |
-| `published_at`  | timestamptz |          | 掲載日時（取得できた場合）                    |
-| `first_seen_at` | timestamptz | not null | バッチが初めて検出した日時                    |
-| `last_seen_at`  | timestamptz | not null | バッチが最後に確認した日時                    |
+| カラム               | 型          | 制約     | 説明                                                                                         |
+| --------------------- | ----------- | -------- | --------------------------------------------------------------------------------------------- |
+| `id`                  | serial      | PK       | 内部 ID                                                                                       |
+| `source_key`          | text        | not null | 掲載サービスのキー（`sources.json` の `key`）                                                 |
+| `title`               | text        |          | タイトル（ビューワーページから取得。詳細取得前は `null`）                                     |
+| `author`              | text        |          | 作者名（ビューワーページから取得）                                                             |
+| `thumbnail_url`       | text        |          | サムネイル画像 URL（ビューワーページから取得）                                                 |
+| `viewer_url`          | text        | not null | ビューワーページ URL                                                                          |
+| `published_at`        | timestamptz |          | 掲載日時（ビューワーページのエピソード公開日から取得）                                        |
+| `year`                | integer     |          | `published_at` の年（年別表示用）                                                              |
+| `details_fetched_at`  | timestamptz |          | 詳細取得バッチが最後にビューワーページへアクセスした日時。`null` は詳細未取得（詳細取得バッチのキュー対象） |
+| `first_seen_at`       | timestamptz | not null | バッチが初めて検出した日時                                                                    |
+| `last_seen_at`        | timestamptz | not null | バッチが最後に確認した日時                                                                    |
 
-- unique 制約: `(source_key, viewer_url)`。バッチはこのキーで upsert する
+- unique 制約: `(source_key, viewer_url)`。URL 収集バッチはこのキーで upsert する
 - 一覧から消えた作品は削除せず、`last_seen_at` が更新されなくなるだけとする
+- Web の一覧表示は `title IS NOT NULL`（＝詳細取得済み）の行のみを対象とする
 
 ### 5.2 genres（ジャンルマスタ）
 
@@ -162,7 +165,8 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
   - 作者名
   - 掲載サービス名（例: コミックDAYS）
   - ジャンルバッジ（得票数上位 3 件、投票が無い場合は非表示）
-- ソート: 掲載日時（`published_at`、無い場合は `first_seen_at`）の新着順
+- ソート: 掲載日時（`published_at`）の新しい順。同着の場合はタイトルの昇順。
+  `published_at` が未取得の作品は末尾に表示する
 - フィルタ: ジャンルによる絞り込み
 - カードのクリック（「読む」）で外部ビューワーページを新規タブで開く
 
@@ -205,30 +209,65 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 
 ## 8. バッチ仕様
 
+バッチは「URL 収集」「詳細取得」の 2 段に分かれる。URL 収集を毎回全ソース完走させてから
+詳細取得（キュー処理）を行うことで、詳細取得に時間がかかっても新規作品の発見自体は
+毎回全ソースで滞りなく行われるようにする（1 サービスだけ処理が偏り続けることを防ぐ）。
+
 ### 8.1 実行環境
 
 - さくらVPS 上で Node.js（TypeScript）製バッチを systemd timer により **6 時間ごと** に実行する
 - Neon へは通常の PostgreSQL 接続（`postgres` ドライバ）で接続する
+- 1 回の実行で「8.2 URL 収集バッチ」→「8.3 詳細取得バッチ」を順に実行する
 
-### 8.2 処理フロー
+### 8.2 URL 収集バッチ
+
+各サイトの読み切り一覧ページからビューワー URL を集め、`oneshots` へ登録する。
 
 1. `sources.json` を読み込み、`enabled: true` のソースを対象とする
 2. 各ソースの `listUrl` に HTTP GET でアクセスする
-3. `parser` に対応するパーサー（`gigaviewer`）で HTML をパースし、
-   タイトル・作者・サムネイル URL・ビューワー URL・掲載日時を抽出する
-   （一覧ページの構造はソースごとに異なるため、抽出処理は `source.key` 単位で実装する）
+3. `parser` に対応するパーサー（`gigaviewer`）で HTML をパースし、ビューワー URL を抽出する
+   （一覧ページの構造・連載作品との混在有無はソースごとに異なるため、
+   対象要素の絞り込みは `source.key` 単位で実装する）
 4. `(source_key, viewer_url)` をキーに `oneshots` へ upsert する
-   - 新規: `first_seen_at` と `last_seen_at` に現在時刻を設定
-   - 既存: メタデータと `last_seen_at` を更新
+   - 新規: `first_seen_at` / `last_seen_at` に現在時刻を設定し、詳細情報は未設定のままとする
+     （`title` 等は `null`、`details_fetched_at` も `null`。詳細取得バッチのキュー対象になる）
+   - 既存: `last_seen_at` のみ更新する（詳細情報は上書きしない）
 5. ソース単位でエラーをハンドリングし、1 ソースの失敗が他ソースへ波及しないようにする
 6. 実行結果（取得件数・新規件数・エラー）をログに出力する
 
-### 8.3 クロールマナー
+### 8.3 詳細取得バッチ
 
-- `robots.txt` を確認し、拒否されているパスへはアクセスしない
+GigaViewer はビューワーページのデザインが全サービス共通であることを利用し、
+ビューワーページから直接タイトル・作者・サムネイル・掲載日を取得する。
+
+1. `oneshots` から `details_fetched_at IS NULL`（詳細未取得）の行を取得し、キューとする
+2. キューを `source_key` ごとにグルーピングし、**ラウンドロビン**で 1 件ずつ処理する
+   （1 ソースの滞留件数が多い場合でも、他ソースの処理が後回しにならないようにするため）
+3. 各ビューワー URL の HTML から次のセレクタで詳細を抽出する
+
+   | 項目       | セレクタ                   | 備考                                           |
+   | ---------- | --------------------------- | ----------------------------------------------- |
+   | タイトル   | `.series-header-title`      |                                                  |
+   | 作者       | `.series-header-author`     | 内部に `<a>` を含む場合はテキストのみ取得       |
+   | サムネイル | `img.series-header-image`   |                                                  |
+   | 掲載日     | `.episode-header-date`      | `published_at` に日付として格納し、年を `year` にも保存 |
+
+4. 取得結果を `oneshots` に反映する
+   - 抽出成功: `title` / `author` / `thumbnail_url` / `published_at` / `year` /
+     `details_fetched_at`（現在時刻）を更新
+   - 抽出失敗（タイトルが取得できない等）: `details_fetched_at` のみ更新し、
+     無限リトライを防ぐ（表示対象からは `title IS NULL` のまま除外され続ける）
+   - HTTP エラー・ネットワークエラー: `details_fetched_at` を更新せず、
+     次回バッチでの再試行対象として残す
+5. 実行結果（試行件数・取得件数・失敗件数・エラー）をソース単位でログに出力する
+
+### 8.4 クロールマナー
+
+- `robots.txt` を確認し、拒否されているパスへはアクセスしない（一覧ページ・ビューワーページ共通）
 - User-Agent に本サービス名と連絡先を明示する
-- リクエスト間隔を空ける（1 リクエスト / 秒以上）
-- 取得するのは読み切り一覧ページのみとし、漫画本体（画像データ）は取得しない
+- リクエスト間隔はサービス（`source_key`）ごとに **1 リクエスト / 秒以上** 空ける
+  （URL 収集・詳細取得のいずれも同じ制約を守る）
+- 取得するのは読み切り一覧ページ・ビューワーページの HTML のみとし、漫画本体（画像データ）は取得しない
 - 各サービスの利用規約を確認し、問題がある場合は `enabled: false` で除外する
 
 ## 9. API 仕様

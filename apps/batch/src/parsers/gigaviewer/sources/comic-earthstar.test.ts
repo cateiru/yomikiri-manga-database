@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://comic-earthstar.com/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/comic-earthstar.png",
 };
 
 describe("gigaviewer/comic-earthstar", () => {
@@ -19,10 +20,7 @@ describe("gigaviewer/comic-earthstar", () => {
 
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
-      expect(item.author).not.toBeNull();
       expect(item.viewerUrl).toMatch(/^https:\/\/comic-earthstar\.com\/episode\/\d+$/);
-      expect(item.thumbnailUrl).toMatch(/^https:\/\//);
     }
   });
 });

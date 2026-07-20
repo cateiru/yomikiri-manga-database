@@ -1,23 +1,16 @@
 import type { CheerioAPI } from "cheerio";
 import type { Source } from "../../../config/sources.js";
-import type { ParsedOneshot } from "../../types.js";
-import { buildItem, cleanText } from "../common.js";
+import type { ParsedOneshotUrl } from "../../types.js";
+import { buildUrlItem } from "../common.js";
 
-export function extract($: CheerioAPI, source: Source): ParsedOneshot[] {
-  const items: ParsedOneshot[] = [];
+export function extract($: CheerioAPI, source: Source): ParsedOneshotUrl[] {
+  const items: ParsedOneshotUrl[] = [];
 
   $("div.series-item").each((_, el) => {
     const item_ = $(el);
     const link = item_.find(".item-series-title a").first();
 
-    const item = buildItem({
-      source,
-      title: cleanText(link.text()),
-      author: cleanText(item_.find(".item-series-author").text()),
-      thumbnailUrl: item_.find("img").attr("data-src") ?? null,
-      viewerUrlRaw: link.attr("href"),
-      publishedAt: null,
-    });
+    const item = buildUrlItem({ source, viewerUrlRaw: link.attr("href") });
 
     if (item) {
       items.push(item);

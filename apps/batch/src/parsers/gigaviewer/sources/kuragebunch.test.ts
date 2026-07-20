@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://kuragebunch.com/series/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/kuragebunch.png",
 };
 
 describe("gigaviewer/kuragebunch", () => {
@@ -19,10 +20,7 @@ describe("gigaviewer/kuragebunch", () => {
 
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
-      expect(item.author).not.toBeNull();
       expect(item.viewerUrl).toMatch(/^https:\/\/kuragebunch\.com\/episode\/\d+$/);
-      expect(item.thumbnailUrl).toMatch(/^https:\/\//);
     }
   });
 });

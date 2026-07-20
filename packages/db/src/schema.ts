@@ -14,17 +14,20 @@ export const oneshots = pgTable(
   {
     id: serial("id").primaryKey(),
     sourceKey: text("source_key").notNull(),
-    title: text("title").notNull(),
+    title: text("title"),
     author: text("author"),
     thumbnailUrl: text("thumbnail_url"),
     viewerUrl: text("viewer_url").notNull(),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    year: integer("year"),
+    detailsFetchedAt: timestamp("details_fetched_at", { withTimezone: true }),
     firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
   },
   (table) => [
     uniqueIndex("oneshots_source_key_viewer_url_unique").on(table.sourceKey, table.viewerUrl),
     index("oneshots_published_at_idx").on(table.publishedAt),
+    index("oneshots_details_fetched_at_idx").on(table.detailsFetchedAt),
   ],
 );
 

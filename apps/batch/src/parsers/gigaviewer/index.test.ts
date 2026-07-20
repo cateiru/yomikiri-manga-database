@@ -19,6 +19,7 @@ describe("assertSupportedSources", () => {
         listUrl: "https://example.com/oneshot",
         parser: "gigaviewer" as const,
         enabled: true,
+        favicon: "/favicons/unknown-source.png",
       },
     ];
     expect(() => assertSupportedSources(sources)).toThrow(/unknown-source/);

@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://comic-gardo.com/series/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/comic-gardo.png",
 };
 
 describe("gigaviewer/comic-gardo", () => {

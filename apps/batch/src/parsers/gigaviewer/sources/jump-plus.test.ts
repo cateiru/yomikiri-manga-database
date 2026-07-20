@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://shonenjumpplus.com/series/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/jump-plus.png",
 };
 
 describe("gigaviewer/jump-plus", () => {
@@ -19,10 +20,7 @@ describe("gigaviewer/jump-plus", () => {
 
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
-      expect(item.author).not.toBeNull();
       expect(item.viewerUrl).toMatch(/^https:\/\/shonenjumpplus\.com\/episode\/\d+$/);
-      expect(item.thumbnailUrl).toMatch(/^https:\/\//);
     }
   });
 });

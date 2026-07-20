@@ -1,16 +1,17 @@
 import type { Db } from "@yomikiri/db/client-node";
 import { oneshots } from "@yomikiri/db/schema";
-import type { ParsedOneshot } from "../parsers/types.js";
+import { eq, isNull } from "drizzle-orm";
+import type { ParsedOneshotUrl, ParsedViewerDetail } from "../parsers/types.js";
 
 export interface UpsertSummary {
   inserted: number;
   updated: number;
 }
 
-export async function upsertOneshots(
+export async function upsertOneshotUrls(
   db: Db,
   sourceKey: string,
-  items: ParsedOneshot[],
+  items: ParsedOneshotUrl[],
 ): Promise<UpsertSummary> {
   const summary: UpsertSummary = { inserted: 0, updated: 0 };
 
@@ -21,21 +22,15 @@ export async function upsertOneshots(
       .insert(oneshots)
       .values({
         sourceKey,
-        title: item.title,
-        author: item.author,
-        thumbnailUrl: item.thumbnailUrl,
         viewerUrl: item.viewerUrl,
-        publishedAt: item.publishedAt,
         firstSeenAt: now,
         lastSeenAt: now,
       })
       .onConflictDoUpdate({
         target: [oneshots.sourceKey, oneshots.viewerUrl],
+        // 詳細情報（title/author/thumbnailUrl/publishedAt/year/detailsFetchedAt）は
+        // 詳細取得バッチのみが更新する。URL 収集バッチは lastSeenAt のみ更新する
         set: {
-          title: item.title,
-          author: item.author,
-          thumbnailUrl: item.thumbnailUrl,
-          publishedAt: item.publishedAt,
           lastSeenAt: now,
         },
       })
@@ -49,4 +44,39 @@ export async function upsertOneshots(
   }
 
   return summary;
+}
+
+export interface DetailsQueueItem {
+  id: number;
+  sourceKey: string;
+  viewerUrl: string;
+}
+
+export async function getUnfetchedOneshots(db: Db): Promise<DetailsQueueItem[]> {
+  return db
+    .select({ id: oneshots.id, sourceKey: oneshots.sourceKey, viewerUrl: oneshots.viewerUrl })
+    .from(oneshots)
+    .where(isNull(oneshots.detailsFetchedAt));
+}
+
+export async function updateOneshotDetail(
+  db: Db,
+  id: number,
+  detail: ParsedViewerDetail,
+): Promise<void> {
+  await db
+    .update(oneshots)
+    .set({
+      title: detail.title,
+      author: detail.author,
+      thumbnailUrl: detail.thumbnailUrl,
+      publishedAt: detail.publishedAt,
+      year: detail.year,
+      detailsFetchedAt: new Date(),
+    })
+    .where(eq(oneshots.id, id));
+}
+
+export async function markDetailsFetchFailed(db: Db, id: number): Promise<void> {
+  await db.update(oneshots).set({ detailsFetchedAt: new Date() }).where(eq(oneshots.id, id));
 }

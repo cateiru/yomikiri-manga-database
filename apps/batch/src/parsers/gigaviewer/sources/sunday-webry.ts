@@ -1,24 +1,17 @@
 import type { CheerioAPI } from "cheerio";
 import type { Source } from "../../../config/sources.js";
-import type { ParsedOneshot } from "../../types.js";
-import { buildItem, cleanText } from "../common.js";
+import type { ParsedOneshotUrl } from "../../types.js";
+import { buildUrlItem } from "../common.js";
 
-export function extract($: CheerioAPI, source: Source): ParsedOneshot[] {
-  const items: ParsedOneshot[] = [];
+export function extract($: CheerioAPI, source: Source): ParsedOneshotUrl[] {
+  const items: ParsedOneshotUrl[] = [];
   const container = $("div.oneshot-container");
 
   container.find("li.webry-series-item").each((_, el) => {
     const li = $(el);
     const link = li.find("a.webry-series-item-link").first();
 
-    const item = buildItem({
-      source,
-      title: cleanText(li.find(".series-title").first().text()),
-      author: cleanText(li.find(".author").text()),
-      thumbnailUrl: li.find("img").attr("data-src") ?? null,
-      viewerUrlRaw: link.attr("href"),
-      publishedAt: null,
-    });
+    const item = buildUrlItem({ source, viewerUrlRaw: link.attr("href") });
 
     if (item) {
       items.push(item);

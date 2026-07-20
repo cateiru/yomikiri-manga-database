@@ -1,13 +1,17 @@
 import type { Source } from "../config/sources.js";
 
-export interface ParsedOneshot {
+export interface ParsedOneshotUrl {
+  viewerUrl: string;
+}
+
+export interface ParsedViewerDetail {
   title: string;
   author: string | null;
   thumbnailUrl: string | null;
-  viewerUrl: string;
   publishedAt: Date | null;
+  year: number | null;
 }
 
 export interface Parser {
-  parse(html: string, source: Source): ParsedOneshot[];
+  parse(html: string, source: Source): ParsedOneshotUrl[];
 }

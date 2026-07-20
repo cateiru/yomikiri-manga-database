@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://comic-days.com/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/comic-days.png",
 };
 
 describe("gigaviewer/comic-days", () => {
@@ -19,11 +20,7 @@ describe("gigaviewer/comic-days", () => {
 
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
       expect(item.viewerUrl).toMatch(/^https:\/\/comic-days\.com\/episode\/\d+$/);
-      expect(item.thumbnailUrl).toMatch(/^https:\/\//);
     }
-    expect(items[0]?.author).not.toBeNull();
-    expect(items[0]?.publishedAt).toBeInstanceOf(Date);
   });
 });

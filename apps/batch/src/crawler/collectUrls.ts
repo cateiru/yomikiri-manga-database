@@ -1,6 +1,6 @@
 import type { Db } from "@yomikiri/db/client-node";
 import type { Source } from "../config/sources.js";
-import { upsertOneshots } from "../db/upsert.js";
+import { upsertOneshotUrls } from "../db/upsert.js";
 import { log } from "../logger.js";
 import { assertSupportedSources, gigaviewerParser } from "../parsers/gigaviewer/index.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
@@ -20,7 +20,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function runCrawl(db: Db, sources: Source[]): Promise<SourceResult[]> {
+/**
+ * 各サイトの読み切り一覧ページからビューワー URL を収集し、oneshots へ登録するバッチ。
+ * 詳細情報（タイトル・著者・サムネイル・掲載日）は fetchDetails 側が別途取得する。
+ */
+export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResult[]> {
   assertSupportedSources(sources);
 
   const results: SourceResult[] = [];
@@ -50,15 +54,18 @@ export async function runCrawl(db: Db, sources: Source[]): Promise<SourceResult[
       result.fetched = items.length;
 
       if (items.length > 0) {
-        const summary = await upsertOneshots(db, source.key, items);
+        const summary = await upsertOneshotUrls(db, source.key, items);
         result.inserted = summary.inserted;
         result.updated = summary.updated;
       }
 
-      log("info", "ソースの取得が完了しました", { ...result });
+      log("info", "ソースの URL 収集が完了しました", { ...result });
     } catch (error) {
       result.error = error instanceof Error ? error.message : String(error);
-      log("error", "ソースの取得に失敗しました", { sourceKey: source.key, error: result.error });
+      log("error", "ソースの URL 収集に失敗しました", {
+        sourceKey: source.key,
+        error: result.error,
+      });
     }
 
     results.push(result);

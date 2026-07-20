@@ -10,6 +10,7 @@ const source: Source = {
   listUrl: "https://comic-y-ours.com/series/oneshot",
   parser: "gigaviewer",
   enabled: true,
+  favicon: "/favicons/comic-y-ours.png",
 };
 
 describe("gigaviewer/comic-y-ours", () => {
@@ -19,10 +20,7 @@ describe("gigaviewer/comic-y-ours", () => {
 
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      expect(item.title.length).toBeGreaterThan(0);
-      expect(item.author).not.toBeNull();
       expect(item.viewerUrl).toMatch(/^https:\/\/comic-y-ours\.com\/episode\/\d+$/);
-      expect(item.thumbnailUrl).toMatch(/^https:\/\//);
     }
   });
 });

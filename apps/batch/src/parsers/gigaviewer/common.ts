@@ -1,6 +1,6 @@
 import type { Source } from "../../config/sources.js";
 import { log } from "../../logger.js";
-import type { ParsedOneshot } from "../types.js";
+import type { ParsedOneshotUrl } from "../types.js";
 
 export function cleanText(text: string | null | undefined): string | null {
   if (!text) {
@@ -36,32 +36,21 @@ export function parseJapaneseDate(text: string | null | undefined): Date | null 
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-interface BuildItemParams {
+interface BuildUrlItemParams {
   source: Source;
-  title: string | null;
-  author: string | null;
-  thumbnailUrl: string | null;
   viewerUrlRaw: string | null | undefined;
-  publishedAt: Date | null;
 }
 
-export function buildItem(params: BuildItemParams): ParsedOneshot | null {
+export function buildUrlItem(params: BuildUrlItemParams): ParsedOneshotUrl | null {
   const viewerUrl = toAbsoluteUrl(params.viewerUrlRaw, params.source.listUrl);
 
-  if (!params.title || !viewerUrl) {
-    log("warn", "必須項目を抽出できなかったため要素をスキップしました", {
+  if (!viewerUrl) {
+    log("warn", "ビューワー URL を抽出できなかったため要素をスキップしました", {
       sourceKey: params.source.key,
-      title: params.title,
-      viewerUrl,
+      viewerUrlRaw: params.viewerUrlRaw,
     });
     return null;
   }
 
-  return {
-    title: params.title,
-    author: params.author,
-    thumbnailUrl: params.thumbnailUrl,
-    viewerUrl,
-    publishedAt: params.publishedAt,
-  };
+  return { viewerUrl };
 }

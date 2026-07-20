@@ -1,6 +1,19 @@
 import type { Db } from "@yomikiri/db/client-serverless";
 import { genres, genreVotes, oneshots } from "@yomikiri/db/schema";
-import { and, asc, desc, eq, exists, inArray, or, type SQL, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 import { getDb } from "./db";
 
 const TOP_GENRE_COUNT = 3;
@@ -28,10 +41,9 @@ export interface OneshotListItem {
 }
 
 export interface OneshotsCursor {
-  /** date_trunc('day', coalesce(published_at, first_seen_at)) のISO文字列 */
-  sortDay: string;
-  /** hashtext(id::text)。日付グループ内の並び順を決める決定論的な疑似ランダムキー */
-  rankKey: number;
+  /** ISO 8601 文字列。掲載日時が無い場合は null */
+  publishedAt: string | null;
+  title: string;
   id: number;
 }
 
@@ -39,12 +51,6 @@ export interface OneshotsPage {
   items: OneshotListItem[];
   nextCursor: OneshotsCursor | null;
 }
-
-// メディア(sourceKey)ごとに固まって表示されるのを防ぐため、日単位でグルーピングし、
-// 同じ日の中では id から決定論的に導出した疑似ランダム順に並び替える
-// (random()だとページをまたいだ際に順序が安定せずkeyset paginationと両立しないため)
-const sortDayExpr = sql`date_trunc('day', coalesce(${oneshots.publishedAt}, ${oneshots.firstSeenAt}))`;
-const rankKeyExpr = sql`hashtext(${oneshots.id}::text)`;
 
 function buildGenreFilterCondition(db: Db, genreKeys: string[]): SQL | undefined {
   if (genreKeys.length === 0) {
@@ -59,25 +65,35 @@ function buildGenreFilterCondition(db: Db, genreKeys: string[]): SQL | undefined
   );
 }
 
+// ソートは公開日時（published_at）の新しい順、同着はタイトル昇順（NULLS LAST）。
+// カーソルはこのソート順と一致させる必要があるため、cursor.publishedAt が
+// null かどうかで「まだ published_at が非 null の範囲を走査中」か
+// 「既に NULLS LAST グループ（published_at が null）を走査中」かを分岐する
 function buildCursorCondition(cursor: OneshotsCursor | null): SQL | undefined {
   if (!cursor) {
     return undefined;
   }
-  const cursorDay = sql`${cursor.sortDay}::timestamptz`;
+
+  const titleTiebreak = or(
+    gt(oneshots.title, cursor.title),
+    and(eq(oneshots.title, cursor.title), gt(oneshots.id, cursor.id)),
+  );
+
+  if (cursor.publishedAt === null) {
+    return and(isNull(oneshots.publishedAt), titleTiebreak);
+  }
+
+  const cursorPublishedAt = sql`${cursor.publishedAt}::timestamptz`;
   return or(
-    sql`${sortDayExpr} < ${cursorDay}`,
-    and(sql`${sortDayExpr} = ${cursorDay}`, sql`${rankKeyExpr} > ${cursor.rankKey}`),
-    and(
-      sql`${sortDayExpr} = ${cursorDay}`,
-      sql`${rankKeyExpr} = ${cursor.rankKey}`,
-      sql`${oneshots.id} > ${cursor.id}`,
-    ),
+    lt(oneshots.publishedAt, cursorPublishedAt),
+    and(eq(oneshots.publishedAt, cursorPublishedAt), titleTiebreak),
+    isNull(oneshots.publishedAt),
   );
 }
 
 interface OneshotRow {
   id: number;
-  title: string;
+  title: string | null;
   author: string | null;
   thumbnailUrl: string | null;
   viewerUrl: string;
@@ -123,7 +139,8 @@ async function attachGenreBadges(db: Db, rows: OneshotRow[]): Promise<OneshotLis
 
     return {
       id: row.id,
-      title: row.title,
+      // 呼び出し元は title IS NOT NULL でフィルタ済みのため非 null が保証される
+      title: row.title as string,
       author: row.author,
       thumbnailUrl: row.thumbnailUrl,
       viewerUrl: row.viewerUrl,
@@ -140,7 +157,9 @@ async function fetchOneshotsPage(
   genreKeys: string[],
   cursor: OneshotsCursor | null,
 ): Promise<OneshotsPage> {
+  // 詳細取得バッチが未処理（title 未取得）の行は表示対象から除外する
   const filterCondition = and(
+    isNotNull(oneshots.title),
     buildGenreFilterCondition(db, genreKeys),
     buildCursorCondition(cursor),
   );
@@ -155,14 +174,10 @@ async function fetchOneshotsPage(
       sourceKey: oneshots.sourceKey,
       publishedAt: oneshots.publishedAt,
       firstSeenAt: oneshots.firstSeenAt,
-      // date_trunc()の結果はNeonドライバーからDateではなく文字列として返るため、
-      // 型は実際の返り値(string)に合わせる
-      sortDay: sql<string>`${sortDayExpr}`.as("sort_day"),
-      rankKey: sql<number>`${rankKeyExpr}`.as("rank_key"),
     })
     .from(oneshots)
     .where(filterCondition)
-    .orderBy(desc(sortDayExpr), asc(rankKeyExpr), asc(oneshots.id))
+    .orderBy(sql`${oneshots.publishedAt} desc nulls last`, asc(oneshots.title), asc(oneshots.id))
     .limit(ONESHOTS_PAGE_SIZE + 1);
 
   const hasMore = rows.length > ONESHOTS_PAGE_SIZE;
@@ -172,7 +187,11 @@ async function fetchOneshotsPage(
   const last = pageRows.at(-1);
   const nextCursor: OneshotsCursor | null =
     hasMore && last
-      ? { sortDay: new Date(last.sortDay).toISOString(), rankKey: last.rankKey, id: last.id }
+      ? {
+          publishedAt: last.publishedAt ? last.publishedAt.toISOString() : null,
+          title: last.title as string,
+          id: last.id,
+        }
       : null;
 
   return { items, nextCursor };
@@ -199,7 +218,7 @@ export async function getOneshotById(id: number): Promise<OneshotListItem | null
       firstSeenAt: oneshots.firstSeenAt,
     })
     .from(oneshots)
-    .where(eq(oneshots.id, id))
+    .where(and(eq(oneshots.id, id), isNotNull(oneshots.title)))
     .limit(1);
 
   if (rows.length === 0) {

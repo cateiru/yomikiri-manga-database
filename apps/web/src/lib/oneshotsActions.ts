@@ -10,8 +10,8 @@ import {
 } from "./oneshots";
 
 const cursorSchema = z.object({
-  sortDay: z.string(),
-  rankKey: z.number().int(),
+  publishedAt: z.string().nullable(),
+  title: z.string(),
   id: z.number().int().positive(),
 });
 

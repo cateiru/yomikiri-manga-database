@@ -1,10 +1,8 @@
-import { EmptyState } from "@/components/EmptyState";
 import { GenreFilter } from "@/components/GenreFilter";
-import { OneshotCard } from "@/components/OneshotCard";
-import { VoteModalController } from "@/components/VoteModalController";
+import { OneshotsGrid } from "@/components/OneshotsGrid";
 import { getDb } from "@/lib/db";
 import { listGenres } from "@/lib/genres";
-import { getOneshotsList } from "@/lib/oneshots";
+import { getOneshotsPage } from "@/lib/oneshots";
 import styles from "./page.module.css";
 
 export const revalidate = 300;
@@ -25,23 +23,18 @@ export default async function TopPage({ searchParams }: TopPageProps) {
   const genreKeys = normalizeGenreParam(genre);
 
   const db = getDb();
-  const [genres, oneshotsList] = await Promise.all([listGenres(db), getOneshotsList(genreKeys)]);
+  const [genres, firstPage] = await Promise.all([listGenres(db), getOneshotsPage(genreKeys)]);
 
   return (
     <main className={styles.main}>
       <GenreFilter genres={genres} />
-      {oneshotsList.length === 0 ? (
-        <EmptyState message="該当する読み切りが見つかりませんでした。" />
-      ) : (
-        <ul className={styles.grid}>
-          {oneshotsList.map((item) => (
-            <li key={item.id}>
-              <OneshotCard item={item} />
-            </li>
-          ))}
-        </ul>
-      )}
-      <VoteModalController items={oneshotsList} genres={genres} />
+      <OneshotsGrid
+        key={genreKeys.join(",")}
+        genreKeys={genreKeys}
+        genres={genres}
+        initialItems={firstPage.items}
+        initialCursor={firstPage.nextCursor}
+      />
     </main>
   );
 }

@@ -1,9 +1,10 @@
 import type { Db } from "@yomikiri/db/client-serverless";
 import { genres, genreVotes, oneshots } from "@yomikiri/db/schema";
-import { and, desc, eq, exists, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, or, type SQL, sql } from "drizzle-orm";
 import { getDb } from "./db";
 
 const TOP_GENRE_COUNT = 3;
+export const ONESHOTS_PAGE_SIZE = 24;
 
 export interface OneshotGenreBadge {
   id: number;
@@ -26,38 +27,66 @@ export interface OneshotListItem {
   genres: OneshotGenreBadge[];
 }
 
-async function fetchOneshotsList(db: Db, genreKeys: string[]): Promise<OneshotListItem[]> {
-  const sortKey = sql`coalesce(${oneshots.publishedAt}, ${oneshots.firstSeenAt})`;
-  // メディア(sourceKey)ごとに固まって表示されるのを防ぐため、日単位でグルーピングし、
-  // 同じ日の中ではランダムな順番に並び替える
-  const sortDay = sql`date_trunc('day', ${sortKey})`;
+export interface OneshotsCursor {
+  /** date_trunc('day', coalesce(published_at, first_seen_at)) のISO文字列 */
+  sortDay: string;
+  /** hashtext(id::text)。日付グループ内の並び順を決める決定論的な疑似ランダムキー */
+  rankKey: number;
+  id: number;
+}
 
-  const filterCondition =
-    genreKeys.length > 0
-      ? exists(
-          db
-            .select({ one: sql`1` })
-            .from(genreVotes)
-            .innerJoin(genres, eq(genres.id, genreVotes.genreId))
-            .where(and(eq(genreVotes.oneshotId, oneshots.id), inArray(genres.key, genreKeys))),
-        )
-      : undefined;
+export interface OneshotsPage {
+  items: OneshotListItem[];
+  nextCursor: OneshotsCursor | null;
+}
 
-  const rows = await db
-    .select({
-      id: oneshots.id,
-      title: oneshots.title,
-      author: oneshots.author,
-      thumbnailUrl: oneshots.thumbnailUrl,
-      viewerUrl: oneshots.viewerUrl,
-      sourceKey: oneshots.sourceKey,
-      publishedAt: oneshots.publishedAt,
-      firstSeenAt: oneshots.firstSeenAt,
-    })
-    .from(oneshots)
-    .where(filterCondition)
-    .orderBy(desc(sortDay), sql`random()`);
+// メディア(sourceKey)ごとに固まって表示されるのを防ぐため、日単位でグルーピングし、
+// 同じ日の中では id から決定論的に導出した疑似ランダム順に並び替える
+// (random()だとページをまたいだ際に順序が安定せずkeyset paginationと両立しないため)
+const sortDayExpr = sql`date_trunc('day', coalesce(${oneshots.publishedAt}, ${oneshots.firstSeenAt}))`;
+const rankKeyExpr = sql`hashtext(${oneshots.id}::text)`;
 
+function buildGenreFilterCondition(db: Db, genreKeys: string[]): SQL | undefined {
+  if (genreKeys.length === 0) {
+    return undefined;
+  }
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(genreVotes)
+      .innerJoin(genres, eq(genres.id, genreVotes.genreId))
+      .where(and(eq(genreVotes.oneshotId, oneshots.id), inArray(genres.key, genreKeys))),
+  );
+}
+
+function buildCursorCondition(cursor: OneshotsCursor | null): SQL | undefined {
+  if (!cursor) {
+    return undefined;
+  }
+  const cursorDay = sql`${cursor.sortDay}::timestamptz`;
+  return or(
+    sql`${sortDayExpr} < ${cursorDay}`,
+    and(sql`${sortDayExpr} = ${cursorDay}`, sql`${rankKeyExpr} > ${cursor.rankKey}`),
+    and(
+      sql`${sortDayExpr} = ${cursorDay}`,
+      sql`${rankKeyExpr} = ${cursor.rankKey}`,
+      sql`${oneshots.id} > ${cursor.id}`,
+    ),
+  );
+}
+
+interface OneshotRow {
+  id: number;
+  title: string;
+  author: string | null;
+  thumbnailUrl: string | null;
+  viewerUrl: string;
+  sourceKey: string;
+  publishedAt: Date | null;
+  firstSeenAt: Date;
+}
+
+async function attachGenreBadges(db: Db, rows: OneshotRow[]): Promise<OneshotListItem[]> {
   const oneshotIds = rows.map((row) => row.id);
   const voteRows =
     oneshotIds.length > 0
@@ -106,6 +135,76 @@ async function fetchOneshotsList(db: Db, genreKeys: string[]): Promise<OneshotLi
   });
 }
 
-export async function getOneshotsList(genreKeys: string[]): Promise<OneshotListItem[]> {
-  return fetchOneshotsList(getDb(), genreKeys);
+async function fetchOneshotsPage(
+  db: Db,
+  genreKeys: string[],
+  cursor: OneshotsCursor | null,
+): Promise<OneshotsPage> {
+  const filterCondition = and(
+    buildGenreFilterCondition(db, genreKeys),
+    buildCursorCondition(cursor),
+  );
+
+  const rows = await db
+    .select({
+      id: oneshots.id,
+      title: oneshots.title,
+      author: oneshots.author,
+      thumbnailUrl: oneshots.thumbnailUrl,
+      viewerUrl: oneshots.viewerUrl,
+      sourceKey: oneshots.sourceKey,
+      publishedAt: oneshots.publishedAt,
+      firstSeenAt: oneshots.firstSeenAt,
+      // date_trunc()の結果はNeonドライバーからDateではなく文字列として返るため、
+      // 型は実際の返り値(string)に合わせる
+      sortDay: sql<string>`${sortDayExpr}`.as("sort_day"),
+      rankKey: sql<number>`${rankKeyExpr}`.as("rank_key"),
+    })
+    .from(oneshots)
+    .where(filterCondition)
+    .orderBy(desc(sortDayExpr), asc(rankKeyExpr), asc(oneshots.id))
+    .limit(ONESHOTS_PAGE_SIZE + 1);
+
+  const hasMore = rows.length > ONESHOTS_PAGE_SIZE;
+  const pageRows = hasMore ? rows.slice(0, ONESHOTS_PAGE_SIZE) : rows;
+  const items = await attachGenreBadges(db, pageRows);
+
+  const last = pageRows.at(-1);
+  const nextCursor: OneshotsCursor | null =
+    hasMore && last
+      ? { sortDay: new Date(last.sortDay).toISOString(), rankKey: last.rankKey, id: last.id }
+      : null;
+
+  return { items, nextCursor };
+}
+
+export async function getOneshotsPage(
+  genreKeys: string[],
+  cursor: OneshotsCursor | null = null,
+): Promise<OneshotsPage> {
+  return fetchOneshotsPage(getDb(), genreKeys, cursor);
+}
+
+export async function getOneshotById(id: number): Promise<OneshotListItem | null> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: oneshots.id,
+      title: oneshots.title,
+      author: oneshots.author,
+      thumbnailUrl: oneshots.thumbnailUrl,
+      viewerUrl: oneshots.viewerUrl,
+      sourceKey: oneshots.sourceKey,
+      publishedAt: oneshots.publishedAt,
+      firstSeenAt: oneshots.firstSeenAt,
+    })
+    .from(oneshots)
+    .where(eq(oneshots.id, id))
+    .limit(1);
+
+  if (rows.length === 0) {
+    return null;
+  }
+  const items = await attachGenreBadges(db, rows);
+  return items[0] ?? null;
 }

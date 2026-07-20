@@ -11,6 +11,7 @@ import {
 } from "@/lib/clientStorage";
 import type { Genre } from "@/lib/genres";
 import type { OneshotListItem } from "@/lib/oneshots";
+import { fetchOneshotByIdAction } from "@/lib/oneshotsActions";
 import { evaluatePendingRead } from "@/lib/readDetection";
 import { VoteModal } from "./VoteModal";
 
@@ -38,7 +39,17 @@ export function VoteModalController({ items, genres }: VoteModalControllerProps)
     const item = items.find((candidate) => candidate.id === result.oneshotId);
     if (item) {
       setTarget(item);
+      return;
     }
+
+    // 無限スクロールでまだ読み込まれていないページに該当作品がある場合
+    // (例: バックグラウンドタブ復帰時の再読み込みでitemsが初期ページのみのケース)
+    // の安全網として単体取得する
+    void fetchOneshotByIdAction(result.oneshotId).then((fallback) => {
+      if (fallback) {
+        setTarget(fallback);
+      }
+    });
   }, [items]);
 
   useEffect(() => {

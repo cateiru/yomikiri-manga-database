@@ -1,0 +1,8 @@
+.sentinel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: var(--space-8);
+  padding: var(--space-4);
+  color: var(--color-ink-70);
+}

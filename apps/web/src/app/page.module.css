@@ -13,20 +13,12 @@
   gap: var(--space-4);
 }
 
-@media (min-width: 560px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.grid > li {
+  min-width: 0;
 }
 
-@media (min-width: 860px) {
+@media (min-width: 640px) {
   .grid {
     grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1140px) {
-  .grid {
-    grid-template-columns: repeat(5, 1fr);
   }
 }

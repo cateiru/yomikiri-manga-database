@@ -23,11 +23,13 @@ export function OneshotCard({ item }: OneshotCardProps) {
       rel="noopener noreferrer"
       onClick={() => setPendingRead(item.id)}
     >
-      {item.thumbnailUrl ? (
-        <img className={styles.thumbnail} src={item.thumbnailUrl} alt="" loading="lazy" />
-      ) : (
-        <ThumbnailPlaceholder />
-      )}
+      <div className={styles.thumbnailFrame}>
+        {item.thumbnailUrl ? (
+          <img className={styles.thumbnail} src={item.thumbnailUrl} alt="" loading="lazy" />
+        ) : (
+          <ThumbnailPlaceholder />
+        )}
+      </div>
       <div className={styles.body}>
         <h3 className={styles.title}>{item.title}</h3>
         {item.author ? <p className={styles.author}>{item.author}</p> : null}

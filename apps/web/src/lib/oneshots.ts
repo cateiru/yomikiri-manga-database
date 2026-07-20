@@ -28,6 +28,9 @@ export interface OneshotListItem {
 
 async function fetchOneshotsList(db: Db, genreKeys: string[]): Promise<OneshotListItem[]> {
   const sortKey = sql`coalesce(${oneshots.publishedAt}, ${oneshots.firstSeenAt})`;
+  // メディア(sourceKey)ごとに固まって表示されるのを防ぐため、日単位でグルーピングし、
+  // 同じ日の中ではランダムな順番に並び替える
+  const sortDay = sql`date_trunc('day', ${sortKey})`;
 
   const filterCondition =
     genreKeys.length > 0
@@ -53,7 +56,7 @@ async function fetchOneshotsList(db: Db, genreKeys: string[]): Promise<OneshotLi
     })
     .from(oneshots)
     .where(filterCondition)
-    .orderBy(desc(sortKey));
+    .orderBy(desc(sortDay), sql`random()`);
 
   const oneshotIds = rows.map((row) => row.id);
   const voteRows =

@@ -9,8 +9,11 @@ export function extractViewerDetail($: CheerioAPI, viewerUrl: string): ParsedVie
   }
 
   const author = cleanText($(".series-header-author").first().text());
+  const thumbnailImg = $("img.series-header-image").first();
+  // GigaViewer のビューワーページは画像を遅延読み込みしており、実際の URL は
+  // src ではなく data-src に入っている
   const thumbnailUrl = toAbsoluteUrl(
-    $("img.series-header-image").first().attr("src") ?? null,
+    thumbnailImg.attr("data-src") ?? thumbnailImg.attr("src") ?? null,
     viewerUrl,
   );
   const publishedAt = parseJapaneseDate(cleanText($(".episode-header-date").first().text()));

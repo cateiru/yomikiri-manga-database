@@ -13,9 +13,20 @@ describe("gigaviewer/viewerDetail", () => {
     expect(detail).not.toBeNull();
     expect(detail?.title).toBe("アナーキーな新学期！");
     expect(detail?.author).toBe("小串カズ");
-    expect(detail?.thumbnailUrl).toMatch(/^https:\/\//);
+    // GigaViewer は画像を遅延読み込みするため src ではなく data-src に実 URL が入る
+    expect(detail?.thumbnailUrl).toMatch(/^https:\/\/cdn-scissors\.gigaviewer\.com\//);
     expect(detail?.publishedAt?.toISOString()).toBe("2026-07-13T00:00:00.000Z");
     expect(detail?.year).toBe(2026);
+  });
+
+  it("data-src が無い場合は src にフォールバックする", () => {
+    const $ = load(`
+      <div class="series-header-title">サンプルタイトル</div>
+      <img class="series-header-image" src="https://example.com/thumb.jpg">
+    `);
+    const detail = extractViewerDetail($, viewerUrl);
+
+    expect(detail?.thumbnailUrl).toBe("https://example.com/thumb.jpg");
   });
 
   it("タイトルが取得できない場合は null を返す", () => {

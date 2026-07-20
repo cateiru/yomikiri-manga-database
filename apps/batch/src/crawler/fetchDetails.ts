@@ -109,6 +109,12 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
       if (detail) {
         await updateOneshotDetail(db, item.id, detail);
         result.fetched += 1;
+        log("info", "詳細を取得しました", {
+          sourceKey,
+          viewerUrl: item.viewerUrl,
+          title: detail.title,
+          remaining,
+        });
       } else {
         // HTML は取得できたがパースに失敗した場合は取得試行済みとして記録し、
         // 無限リトライを防ぐ（表示対象からは title IS NULL のまま除外される）

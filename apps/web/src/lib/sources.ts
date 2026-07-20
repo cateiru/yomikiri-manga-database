@@ -6,6 +6,7 @@ interface Source {
   listUrl: string;
   parser: string;
   enabled: boolean;
+  favicon: string;
 }
 
 const sourcesByKey = new Map(
@@ -17,9 +18,5 @@ export function getSourceName(sourceKey: string): string {
 }
 
 export function getSourceFaviconUrl(sourceKey: string): string | null {
-  const source = sourcesByKey.get(sourceKey);
-  if (!source) {
-    return null;
-  }
-  return `${new URL(source.listUrl).origin}/favicon.ico`;
+  return sourcesByKey.get(sourceKey)?.favicon ?? null;
 }

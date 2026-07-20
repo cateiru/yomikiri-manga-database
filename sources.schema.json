@@ -20,7 +20,7 @@
   "definitions": {
     "source": {
       "type": "object",
-      "required": ["key", "name", "listUrl", "parser", "enabled"],
+      "required": ["key", "name", "listUrl", "parser", "enabled", "favicon"],
       "additionalProperties": false,
       "properties": {
         "key": {
@@ -37,6 +37,11 @@
           "type": "string",
           "format": "uri",
           "description": "読み切り一覧ページの URL"
+        },
+        "favicon": {
+          "type": "string",
+          "pattern": "^/favicons/.+\\.png$",
+          "description": "apps/web/public 以下に配置した favicon 画像への絶対パス"
         },
         "parser": {
           "type": "string",

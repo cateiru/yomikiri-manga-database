@@ -7,6 +7,7 @@ const sourceSchema = z.object({
   listUrl: z.string().url(),
   parser: z.enum(["gigaviewer"]),
   enabled: z.boolean(),
+  favicon: z.string(),
 });
 
 const sourcesFileSchema = z.object({

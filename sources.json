@@ -6,98 +6,112 @@
       "name": "コミックDAYS",
       "listUrl": "https://comic-days.com/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-days.png"
     },
     {
       "key": "jump-plus",
       "name": "少年ジャンプ+",
       "listUrl": "https://shonenjumpplus.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/jump-plus.png"
     },
     {
       "key": "tonarinoyj",
       "name": "となりのヤングジャンプ",
       "listUrl": "https://tonarinoyj.jp/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/tonarinoyj.png"
     },
     {
       "key": "kuragebunch",
       "name": "くらげバンチ",
       "listUrl": "https://kuragebunch.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/kuragebunch.png"
     },
     {
       "key": "comic-gardo",
       "name": "コミックガルド",
       "listUrl": "https://comic-gardo.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-gardo.png"
     },
     {
       "key": "zenon-plus",
       "name": "ゼノンプラス",
       "listUrl": "https://comic-zenon.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/zenon-plus.png"
     },
     {
       "key": "magcomi",
       "name": "マグコミ",
       "listUrl": "https://magcomi.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/magcomi.png"
     },
     {
       "key": "comic-action",
       "name": "コミックアクション",
       "listUrl": "https://comic-action.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-action.png"
     },
     {
       "key": "comic-trail",
       "name": "コミックトレイル",
       "listUrl": "https://comic-trail.com/series#oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-trail.png"
     },
     {
       "key": "mangatime-square",
       "name": "まんがタイムスクエア",
       "listUrl": "https://mangatime-square.com/series#extra",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/mangatime-square.png"
     },
     {
       "key": "sunday-webry",
       "name": "サンデーうぇぶり",
       "listUrl": "https://www.sunday-webry.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/sunday-webry.png"
     },
     {
       "key": "comic-earthstar",
       "name": "コミックアース・スター",
       "listUrl": "https://comic-earthstar.com/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-earthstar.png"
     },
     {
       "key": "ichijin-plus",
       "name": "一迅プラス",
       "listUrl": "https://ichicomi.com/series#oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/ichijin-plus.png"
     },
     {
       "key": "comic-y-ours",
       "name": "COMIC Y-OURS",
       "listUrl": "https://comic-y-ours.com/series/oneshot",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-y-ours.png"
     }
   ]
 }

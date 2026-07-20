@@ -75,7 +75,7 @@
     },
     {
       "key": "mangatime-square",
-      "name": "まんがタイムスクエア",
+      "name": "まんがタイムSquare",
       "listUrl": "https://mangatime-square.com/series#extra",
       "parser": "gigaviewer",
       "enabled": true,

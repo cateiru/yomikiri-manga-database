@@ -1,0 +1,89 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: yomikiri
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d yomikiri"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # @neondatabase/serverless（apps/web が使う Neon serverless ドライバ）は
+  # WebSocket 経由でしか Postgres に接続できないため、ローカルの Postgres
+  # コンテナに TCP 接続できるよう WebSocket プロキシを挟む
+  wsproxy:
+    image: ghcr.io/neondatabase/wsproxy:latest
+    environment:
+      LISTEN_PORT: ":5433"
+      ALLOW_ADDR_REGEX: "^db:5432$"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: node:24.16.0-bookworm-slim
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/yomikiri
+      # apps/web からの Postgres 接続は @neondatabase/serverless（WebSocket）経由のため、
+      # ローカル開発時のみ wsproxy を介して接続する
+      NEON_LOCAL_WS_PROXY: "wsproxy:5433/v1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - pnpm-store:/app/.pnpm-store
+      - node-modules-root:/app/node_modules
+      - node-modules-web:/app/apps/web/node_modules
+      - node-modules-batch:/app/apps/batch/node_modules
+      - node-modules-db:/app/packages/db/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      wsproxy:
+        condition: service_started
+    command: >
+      sh -c "
+        corepack enable &&
+        pnpm install &&
+        printf 'DATABASE_URL=%s\n' \"$$DATABASE_URL\" > apps/web/.dev.vars &&
+        pnpm --filter @yomikiri/web exec next dev --hostname 0.0.0.0 --port 3000
+      "
+
+  batch:
+    image: node:24.16.0-bookworm-slim
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/yomikiri
+    volumes:
+      - .:/app
+      - pnpm-store:/app/.pnpm-store
+      - node-modules-root:/app/node_modules
+      - node-modules-web:/app/apps/web/node_modules
+      - node-modules-batch:/app/apps/batch/node_modules
+      - node-modules-db:/app/packages/db/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["batch"]
+    command: >
+      sh -c "
+        corepack enable &&
+        pnpm install &&
+        pnpm --filter @yomikiri/batch start
+      "
+
+volumes:
+  db-data:
+  pnpm-store:
+  node-modules-root:
+  node-modules-web:
+  node-modules-batch:
+  node-modules-db:

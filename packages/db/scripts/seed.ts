@@ -15,6 +15,7 @@ const GENRES = [
   { key: "slice-of-life", label: "日常", sortOrder: 8 },
   { key: "sports", label: "スポーツ", sortOrder: 9 },
   { key: "drama", label: "ヒューマンドラマ", sortOrder: 10 },
+  { key: "gourmet", label: "グルメ", sortOrder: 11 },
 ] as const;
 
 async function main() {

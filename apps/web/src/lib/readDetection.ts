@@ -1,6 +1,6 @@
 import type { PendingRead } from "./clientStorage";
 
-const READ_THRESHOLD_MS = 60_000;
+const READ_THRESHOLD_MS = 10_000;
 
 export interface EvaluatePendingReadParams {
   pendingRead: PendingRead | null;

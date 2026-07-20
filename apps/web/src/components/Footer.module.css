@@ -1,6 +1,11 @@
 .footer {
   border-top: var(--border-width) solid var(--color-ink);
   color: var(--color-ink-70);
+
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  width: 100%;
 }
 
 .inner {
@@ -9,7 +14,7 @@
   padding: var(--space-4) var(--space-6);
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: var(--space-4);
 }

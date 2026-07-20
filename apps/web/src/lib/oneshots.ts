@@ -1,11 +1,9 @@
 import type { Db } from "@yomikiri/db/client-serverless";
 import { genres, genreVotes, oneshots } from "@yomikiri/db/schema";
 import { and, desc, eq, exists, inArray, sql } from "drizzle-orm";
-import { unstable_cache } from "next/cache";
 import { getDb } from "./db";
 
 const TOP_GENRE_COUNT = 3;
-const REVALIDATE_SECONDS = 300;
 
 export interface OneshotGenreBadge {
   id: number;
@@ -106,11 +104,5 @@ async function fetchOneshotsList(db: Db, genreKeys: string[]): Promise<OneshotLi
 }
 
 export async function getOneshotsList(genreKeys: string[]): Promise<OneshotListItem[]> {
-  const sortedGenreKeys = [...genreKeys].sort();
-  const cached = unstable_cache(
-    () => fetchOneshotsList(getDb(), sortedGenreKeys),
-    ["oneshots-list", ...sortedGenreKeys],
-    { revalidate: REVALIDATE_SECONDS, tags: ["oneshots"] },
-  );
-  return cached();
+  return fetchOneshotsList(getDb(), genreKeys);
 }

@@ -1,8 +1,13 @@
 import type { Db } from "@yomikiri/db/client-node";
 import type { Source } from "../config/sources.js";
-import { upsertOneshotUrls } from "../db/upsert.js";
+import {
+  getExistingViewerUrlPaths,
+  normalizeViewerUrlPath,
+  upsertOneshotUrls,
+} from "../db/upsert.js";
 import { log } from "../logger.js";
 import { assertSupportedSources, gigaviewerParser } from "../parsers/gigaviewer/index.js";
+import type { ParsedOneshotUrl } from "../parsers/types.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
 import { fetchRobotsRules } from "./robots.js";
 
@@ -13,6 +18,7 @@ export interface SourceResult {
   fetched: number;
   inserted: number;
   updated: number;
+  skipped: number;
   error: string | null;
 }
 
@@ -39,6 +45,7 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
       fetched: 0,
       inserted: 0,
       updated: 0,
+      skipped: 0,
       error: null,
     };
 
@@ -50,8 +57,11 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
       }
 
       const html = await fetchHtml(source.listUrl);
-      const items = gigaviewerParser.parse(html, source);
-      result.fetched = items.length;
+      const parsedItems = gigaviewerParser.parse(html, source);
+      result.fetched = parsedItems.length;
+
+      const items = await filterFallbackDuplicates(db, source, parsedItems);
+      result.skipped = parsedItems.length - items.length;
 
       if (items.length > 0) {
         const summary = await upsertOneshotUrls(db, source.key, items);
@@ -76,4 +86,21 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
   }
 
   return results;
+}
+
+/**
+ * source.fallbackSourceKey が設定されている場合、そのソースに既に登録済みの
+ * viewer URL（?from= 等のクエリを除いたパスで比較）と重複する item を除外する
+ */
+async function filterFallbackDuplicates(
+  db: Db,
+  source: Source,
+  items: ParsedOneshotUrl[],
+): Promise<ParsedOneshotUrl[]> {
+  if (!source.fallbackSourceKey) {
+    return items;
+  }
+
+  const existingPaths = await getExistingViewerUrlPaths(db, source.fallbackSourceKey);
+  return items.filter((item) => !existingPaths.has(normalizeViewerUrlPath(item.viewerUrl)));
 }

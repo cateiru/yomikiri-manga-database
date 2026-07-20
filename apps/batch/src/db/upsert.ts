@@ -8,6 +8,30 @@ export interface UpsertSummary {
   updated: number;
 }
 
+/**
+ * viewer URL からクエリ・フラグメントを除いたパスを返す。
+ * 姉妹サイト（?from= 付きの URL）と正規ソースの URL を同一視するための正規化
+ */
+export function normalizeViewerUrlPath(viewerUrl: string): string {
+  const url = new URL(viewerUrl);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+/**
+ * 指定した source のうち登録済みの viewer URL を、正規化したパスの集合として返す。
+ * fallbackSourceKey による重複除外の判定に使う
+ */
+export async function getExistingViewerUrlPaths(db: Db, sourceKey: string): Promise<Set<string>> {
+  const rows = await db
+    .select({ viewerUrl: oneshots.viewerUrl })
+    .from(oneshots)
+    .where(eq(oneshots.sourceKey, sourceKey));
+
+  return new Set(rows.map((row) => normalizeViewerUrlPath(row.viewerUrl)));
+}
+
 export async function upsertOneshotUrls(
   db: Db,
   sourceKey: string,

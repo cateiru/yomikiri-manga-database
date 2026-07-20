@@ -7,11 +7,14 @@ import { extract as comicEarthstar } from "./sources/comic-earthstar.js";
 import { extract as comicGardo } from "./sources/comic-gardo.js";
 import { extract as comicTrail } from "./sources/comic-trail.js";
 import { extract as comicYOurs } from "./sources/comic-y-ours.js";
+import { extract as comicbunchKai } from "./sources/comicbunch-kai.js";
+import { extract as getsumagakichi } from "./sources/getsumagakichi.js";
 import { extract as ichijinPlus } from "./sources/ichijin-plus.js";
 import { extract as jumpPlus } from "./sources/jump-plus.js";
 import { extract as kuragebunch } from "./sources/kuragebunch.js";
 import { extract as magcomi } from "./sources/magcomi.js";
 import { extract as mangatimeSquare } from "./sources/mangatime-square.js";
+import { extract as morningTwo } from "./sources/morning-two.js";
 import { extract as sundayWebry } from "./sources/sunday-webry.js";
 import { extract as tonarinoyj } from "./sources/tonarinoyj.js";
 import { extract as zenonPlus } from "./sources/zenon-plus.js";
@@ -33,6 +36,9 @@ const registry: Record<string, Extractor> = {
   "comic-earthstar": comicEarthstar,
   "ichijin-plus": ichijinPlus,
   "comic-y-ours": comicYOurs,
+  "morning-two": morningTwo,
+  getsumagakichi,
+  "comicbunch-kai": comicbunchKai,
 };
 
 export function assertSupportedSources(sources: Source[]): void {

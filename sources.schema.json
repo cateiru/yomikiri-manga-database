@@ -51,6 +51,11 @@
         "enabled": {
           "type": "boolean",
           "description": "false にするとクロール対象から除外する"
+        },
+        "fallbackSourceKey": {
+          "type": "string",
+          "minLength": 1,
+          "description": "指定した source.key に既に同一パスの viewer URL が登録済みの場合、このソースでの登録をスキップする（姉妹サイト等での重複防止用）"
         }
       }
     }

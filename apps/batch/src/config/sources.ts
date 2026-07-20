@@ -8,6 +8,7 @@ const sourceSchema = z.object({
   parser: z.enum(["gigaviewer"]),
   enabled: z.boolean(),
   favicon: z.string(),
+  fallbackSourceKey: z.string().min(1).optional(),
 });
 
 const sourcesFileSchema = z.object({

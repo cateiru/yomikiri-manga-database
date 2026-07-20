@@ -1,3 +1,6 @@
+"use client";
+
+import { setPendingRead } from "@/lib/clientStorage";
 import type { OneshotListItem } from "@/lib/oneshots";
 import { getSourceFaviconUrl, getSourceName } from "@/lib/sources";
 import { GenreBadge } from "./GenreBadge";
@@ -13,7 +16,13 @@ export function OneshotCard({ item }: OneshotCardProps) {
   const faviconUrl = getSourceFaviconUrl(item.sourceKey);
 
   return (
-    <a className={styles.card} href={item.viewerUrl} target="_blank" rel="noopener noreferrer">
+    <a
+      className={styles.card}
+      href={item.viewerUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => setPendingRead(item.id)}
+    >
       {item.thumbnailUrl ? (
         <img className={styles.thumbnail} src={item.thumbnailUrl} alt="" loading="lazy" />
       ) : (

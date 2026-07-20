@@ -1,6 +1,7 @@
 import { EmptyState } from "@/components/EmptyState";
 import { GenreFilter } from "@/components/GenreFilter";
 import { OneshotCard } from "@/components/OneshotCard";
+import { VoteModalController } from "@/components/VoteModalController";
 import { getDb } from "@/lib/db";
 import { listGenres } from "@/lib/genres";
 import { getOneshotsList } from "@/lib/oneshots";
@@ -40,6 +41,7 @@ export default async function TopPage({ searchParams }: TopPageProps) {
           ))}
         </ul>
       )}
+      <VoteModalController items={oneshotsList} genres={genres} />
     </main>
   );
 }

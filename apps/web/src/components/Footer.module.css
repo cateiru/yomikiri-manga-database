@@ -25,4 +25,9 @@
 
 .inner a {
   color: var(--color-ink-70);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }

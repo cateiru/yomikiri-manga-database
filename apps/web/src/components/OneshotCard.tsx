@@ -21,8 +21,8 @@ export function OneshotCard({ item, isRead = false }: OneshotCardProps) {
       className={isRead ? `${styles.card} ${styles.read}` : styles.card}
       href={item.viewerUrl}
       target="_blank"
-      rel="noopener noreferrer"
       onClick={() => setPendingRead(item.id)}
+      rel="noopener"
     >
       <div className={styles.thumbnailFrame}>
         {item.thumbnailUrl ? (

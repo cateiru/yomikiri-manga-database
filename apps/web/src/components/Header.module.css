@@ -16,9 +16,22 @@
 .logo {
   font-size: var(--text-xl);
   font-weight: 700;
+  text-decoration: none;
 }
 
 .count {
   font-size: var(--text-sm);
   color: var(--color-ink-70);
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.nav a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

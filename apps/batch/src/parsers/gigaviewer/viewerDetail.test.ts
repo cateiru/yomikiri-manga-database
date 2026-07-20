@@ -11,8 +11,8 @@ describe("gigaviewer/viewerDetail", () => {
     const detail = extractViewerDetail($, viewerUrl);
 
     expect(detail).not.toBeNull();
-    expect(detail?.title).toBe("アナーキーな新学期！");
-    expect(detail?.author).toBe("小串カズ");
+    expect(detail?.title).toBe("サンプル読切作品");
+    expect(detail?.author).toBe("サンプル作者");
     // GigaViewer は画像を遅延読み込みするため src ではなく data-src に実 URL が入る
     expect(detail?.thumbnailUrl).toMatch(/^https:\/\/cdn-scissors\.gigaviewer\.com\//);
     expect(detail?.publishedAt?.toISOString()).toBe("2026-07-13T00:00:00.000Z");

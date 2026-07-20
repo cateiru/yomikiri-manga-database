@@ -11,7 +11,7 @@
     },
     {
       "key": "jump-plus",
-      "name": "少年ジャンプ+",
+      "name": "少年ジャンプ＋",
       "listUrl": "https://shonenjumpplus.com/series/oneshot",
       "parser": "gigaviewer",
       "enabled": true,

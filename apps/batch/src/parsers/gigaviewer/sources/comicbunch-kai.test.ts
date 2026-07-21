@@ -7,7 +7,7 @@ import { extract } from "./comicbunch-kai.js";
 const source: Source = {
   key: "comicbunch-kai",
   name: "コミックバンチKai",
-  listUrl: "https://comicbunch-kai.com/series#oneshot",
+  listUrls: ["https://comicbunch-kai.com/series#oneshot"],
   siteUrl: "https://comicbunch-kai.com/",
   parser: "gigaviewer",
   enabled: true,

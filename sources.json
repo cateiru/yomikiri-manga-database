@@ -4,8 +4,7 @@
     {
       "key": "comic-days",
       "name": "コミックDAYS",
-      "listUrl": "https://comic-days.com/oneshot",
-      "additionalListUrls": ["https://comic-days.com/newcomer"],
+      "listUrls": ["https://comic-days.com/oneshot", "https://comic-days.com/newcomer"],
       "siteUrl": "https://comic-days.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -14,7 +13,7 @@
     {
       "key": "jump-plus",
       "name": "少年ジャンプ＋",
-      "listUrl": "https://shonenjumpplus.com/series/oneshot",
+      "listUrls": ["https://shonenjumpplus.com/series/oneshot"],
       "siteUrl": "https://shonenjumpplus.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -23,7 +22,7 @@
     {
       "key": "tonarinoyj",
       "name": "となりのヤングジャンプ",
-      "listUrl": "https://tonarinoyj.jp/series/oneshot",
+      "listUrls": ["https://tonarinoyj.jp/series/oneshot"],
       "siteUrl": "https://tonarinoyj.jp/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -32,7 +31,7 @@
     {
       "key": "kuragebunch",
       "name": "くらげバンチ",
-      "listUrl": "https://kuragebunch.com/series/oneshot",
+      "listUrls": ["https://kuragebunch.com/series/oneshot"],
       "siteUrl": "https://kuragebunch.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -41,7 +40,7 @@
     {
       "key": "comic-gardo",
       "name": "コミックガルド",
-      "listUrl": "https://comic-gardo.com/series/oneshot",
+      "listUrls": ["https://comic-gardo.com/series/oneshot"],
       "siteUrl": "https://comic-gardo.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -50,8 +49,10 @@
     {
       "key": "zenon-plus",
       "name": "ゼノンプラス",
-      "listUrl": "https://comic-zenon.com/series/oneshot",
-      "additionalListUrls": ["https://comic-zenon.com/series/newcomer"],
+      "listUrls": [
+        "https://comic-zenon.com/series/oneshot",
+        "https://comic-zenon.com/series/newcomer"
+      ],
       "siteUrl": "https://comic-zenon.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -60,8 +61,10 @@
     {
       "key": "magcomi",
       "name": "マグコミ",
-      "listUrl": "https://magcomi.com/series/oneshot",
-      "additionalListUrls": ["https://magcomi.com/series/award_other#award"],
+      "listUrls": [
+        "https://magcomi.com/series/oneshot",
+        "https://magcomi.com/series/award_other#award"
+      ],
       "siteUrl": "https://magcomi.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -70,7 +73,7 @@
     {
       "key": "comic-action",
       "name": "webアクション",
-      "listUrl": "https://comic-action.com/series/oneshot",
+      "listUrls": ["https://comic-action.com/series/oneshot"],
       "siteUrl": "https://comic-action.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -79,7 +82,7 @@
     {
       "key": "comic-trail",
       "name": "コミックトレイル",
-      "listUrl": "https://comic-trail.com/series#oneshot",
+      "listUrls": ["https://comic-trail.com/series#oneshot"],
       "siteUrl": "https://comic-trail.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -88,7 +91,7 @@
     {
       "key": "mangatime-square",
       "name": "まんがタイムSquare",
-      "listUrl": "https://mangatime-square.com/series#extra",
+      "listUrls": ["https://mangatime-square.com/series#extra"],
       "siteUrl": "https://mangatime-square.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -97,7 +100,7 @@
     {
       "key": "sunday-webry",
       "name": "サンデーうぇぶり",
-      "listUrl": "https://www.sunday-webry.com/series/oneshot",
+      "listUrls": ["https://www.sunday-webry.com/series/oneshot"],
       "siteUrl": "https://www.sunday-webry.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -106,7 +109,7 @@
     {
       "key": "comic-earthstar",
       "name": "コミックアース・スター",
-      "listUrl": "https://comic-earthstar.com/oneshot",
+      "listUrls": ["https://comic-earthstar.com/oneshot"],
       "siteUrl": "https://comic-earthstar.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -115,7 +118,7 @@
     {
       "key": "ichijin-plus",
       "name": "一迅プラス",
-      "listUrl": "https://ichicomi.com/series#oneshot",
+      "listUrls": ["https://ichicomi.com/series#oneshot"],
       "siteUrl": "https://ichicomi.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -124,7 +127,7 @@
     {
       "key": "comic-y-ours",
       "name": "COMIC Y-OURS",
-      "listUrl": "https://comic-y-ours.com/series/oneshot",
+      "listUrls": ["https://comic-y-ours.com/series/oneshot"],
       "siteUrl": "https://comic-y-ours.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -133,7 +136,7 @@
     {
       "key": "morning-two",
       "name": "モーニング・ツー",
-      "listUrl": "https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A",
+      "listUrls": ["https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A"],
       "siteUrl": "https://morningtwo.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -143,7 +146,7 @@
     {
       "key": "getsumagakichi",
       "name": "月マガ基地",
-      "listUrl": "https://getsumagakichi.com/series/oneshot_newcomer",
+      "listUrls": ["https://getsumagakichi.com/series/oneshot_newcomer"],
       "siteUrl": "https://getsumagakichi.com/",
       "parser": "gigaviewer",
       "enabled": true,
@@ -153,7 +156,7 @@
     {
       "key": "comicbunch-kai",
       "name": "コミックバンチKai",
-      "listUrl": "https://comicbunch-kai.com/series#oneshot",
+      "listUrls": ["https://comicbunch-kai.com/series#oneshot"],
       "siteUrl": "https://comicbunch-kai.com/",
       "parser": "gigaviewer",
       "enabled": true,

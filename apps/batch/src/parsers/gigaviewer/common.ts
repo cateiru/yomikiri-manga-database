@@ -42,7 +42,7 @@ interface BuildUrlItemParams {
 }
 
 export function buildUrlItem(params: BuildUrlItemParams): ParsedOneshotUrl | null {
-  const viewerUrl = toAbsoluteUrl(params.viewerUrlRaw, params.source.listUrl);
+  const viewerUrl = toAbsoluteUrl(params.viewerUrlRaw, params.source.siteUrl);
 
   if (!viewerUrl) {
     log("warn", "ビューワー URL を抽出できなかったため要素をスキップしました", {

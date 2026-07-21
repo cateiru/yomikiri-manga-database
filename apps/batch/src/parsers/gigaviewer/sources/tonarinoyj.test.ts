@@ -7,7 +7,7 @@ import { extract } from "./tonarinoyj.js";
 const source: Source = {
   key: "tonarinoyj",
   name: "となりのヤングジャンプ",
-  listUrl: "https://tonarinoyj.jp/series/oneshot",
+  listUrls: ["https://tonarinoyj.jp/series/oneshot"],
   siteUrl: "https://tonarinoyj.jp/",
   parser: "gigaviewer",
   enabled: true,

@@ -7,7 +7,7 @@ import { extract } from "./ichijin-plus.js";
 const source: Source = {
   key: "ichijin-plus",
   name: "一迅プラス",
-  listUrl: "https://ichicomi.com/series#oneshot",
+  listUrls: ["https://ichicomi.com/series#oneshot"],
   siteUrl: "https://ichicomi.com/",
   parser: "gigaviewer",
   enabled: true,

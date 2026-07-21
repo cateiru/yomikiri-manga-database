@@ -3,7 +3,7 @@ import sourcesData from "../../../../sources.json";
 interface Source {
   key: string;
   name: string;
-  listUrl: string;
+  listUrls: string[];
   siteUrl: string;
   parser: string;
   enabled: boolean;

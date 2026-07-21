@@ -10,7 +10,7 @@ function buildSource(overrides: Partial<Source> = {}): Source {
   return {
     key: "morning-two",
     name: "モーニング・ツー",
-    listUrl: "https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A",
+    listUrls: ["https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A"],
     siteUrl: "https://morningtwo.com/",
     parser: "gigaviewer",
     enabled: true,
@@ -68,8 +68,8 @@ describe("collectUrls の fallbackSourceKey 処理", () => {
   });
 });
 
-describe("collectUrls の additionalListUrls 処理", () => {
-  it("additionalListUrls に指定した各ページを取得し、同じ source.key で集約する", async () => {
+describe("collectUrls の listUrls 処理", () => {
+  it("listUrls に指定した各ページを取得し、同じ source.key で集約する", async () => {
     vi.spyOn(robotsModule, "fetchRobotsRules").mockResolvedValue({ isAllowed: () => true });
     vi.spyOn(fetchHtmlModule, "fetchHtml").mockImplementation(async (url: string) => {
       if (url === "https://comic-days.com/oneshot") {
@@ -87,8 +87,7 @@ describe("collectUrls の additionalListUrls 処理", () => {
     const source: Source = {
       key: "comic-days",
       name: "コミックDAYS",
-      listUrl: "https://comic-days.com/oneshot",
-      additionalListUrls: ["https://comic-days.com/oneshot_newcomer"],
+      listUrls: ["https://comic-days.com/oneshot", "https://comic-days.com/oneshot_newcomer"],
       siteUrl: "https://comic-days.com/",
       parser: "gigaviewer",
       enabled: true,

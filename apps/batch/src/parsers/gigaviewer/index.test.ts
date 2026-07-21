@@ -16,7 +16,7 @@ describe("assertSupportedSources", () => {
       {
         key: "unknown-source",
         name: "未対応サービス",
-        listUrl: "https://example.com/oneshot",
+        listUrls: ["https://example.com/oneshot"],
         siteUrl: "https://example.com/",
         parser: "gigaviewer" as const,
         enabled: true,

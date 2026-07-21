@@ -20,7 +20,7 @@
   "definitions": {
     "source": {
       "type": "object",
-      "required": ["key", "name", "listUrl", "siteUrl", "parser", "enabled", "favicon"],
+      "required": ["key", "name", "listUrls", "siteUrl", "parser", "enabled", "favicon"],
       "additionalProperties": false,
       "properties": {
         "key": {
@@ -33,18 +33,14 @@
           "minLength": 1,
           "description": "表示用のサービス名"
         },
-        "listUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "読み切り一覧ページの URL"
-        },
-        "additionalListUrls": {
+        "listUrls": {
           "type": "array",
           "items": {
             "type": "string",
             "format": "uri"
           },
-          "description": "同一ソース内で追加でクロールする一覧ページの URL（同じ parser で解析し、同じ source.key で登録する）"
+          "minItems": 1,
+          "description": "クロール対象の一覧ページ URL（同じ parser で解析し、同じ source.key で登録する）"
         },
         "siteUrl": {
           "type": "string",

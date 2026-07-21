@@ -7,7 +7,7 @@ import { extract } from "./kuragebunch.js";
 const source: Source = {
   key: "kuragebunch",
   name: "くらげバンチ",
-  listUrl: "https://kuragebunch.com/series/oneshot",
+  listUrls: ["https://kuragebunch.com/series/oneshot"],
   siteUrl: "https://kuragebunch.com/",
   parser: "gigaviewer",
   enabled: true,

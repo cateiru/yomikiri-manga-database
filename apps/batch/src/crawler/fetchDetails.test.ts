@@ -10,7 +10,7 @@ function buildSource(key: string): Source {
   return {
     key,
     name: key,
-    listUrl: `https://${key}.example.com/oneshot`,
+    listUrls: [`https://${key}.example.com/oneshot`],
     siteUrl: `https://${key}.example.com/`,
     parser: "gigaviewer",
     enabled: true,

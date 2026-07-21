@@ -7,7 +7,7 @@ import { extract } from "./comic-trail.js";
 const source: Source = {
   key: "comic-trail",
   name: "コミックトレイル",
-  listUrl: "https://comic-trail.com/series#oneshot",
+  listUrls: ["https://comic-trail.com/series#oneshot"],
   siteUrl: "https://comic-trail.com/",
   parser: "gigaviewer",
   enabled: true,

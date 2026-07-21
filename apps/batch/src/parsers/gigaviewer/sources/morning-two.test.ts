@@ -7,7 +7,7 @@ import { extract } from "./morning-two.js";
 const source: Source = {
   key: "morning-two",
   name: "モーニング・ツー",
-  listUrl: "https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A",
+  listUrls: ["https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A"],
   siteUrl: "https://morningtwo.com/",
   parser: "gigaviewer",
   enabled: true,

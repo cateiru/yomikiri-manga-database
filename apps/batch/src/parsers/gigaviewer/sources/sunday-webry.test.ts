@@ -7,7 +7,7 @@ import { extract } from "./sunday-webry.js";
 const source: Source = {
   key: "sunday-webry",
   name: "サンデーうぇぶり",
-  listUrl: "https://www.sunday-webry.com/series/oneshot",
+  listUrls: ["https://www.sunday-webry.com/series/oneshot"],
   siteUrl: "https://www.sunday-webry.com/",
   parser: "gigaviewer",
   enabled: true,

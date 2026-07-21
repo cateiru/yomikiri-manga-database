@@ -86,7 +86,7 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
     try {
       let robots = robotsBySource.get(sourceKey);
       if (!robots) {
-        robots = await fetchRobotsRules(source.listUrl, USER_AGENT);
+        robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
         robotsBySource.set(sourceKey, robots);
       }
       const path = new URL(item.viewerUrl).pathname;

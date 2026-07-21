@@ -7,7 +7,7 @@ import { extract } from "./comic-gardo.js";
 const source: Source = {
   key: "comic-gardo",
   name: "コミックガルド",
-  listUrl: "https://comic-gardo.com/series/oneshot",
+  listUrls: ["https://comic-gardo.com/series/oneshot"],
   siteUrl: "https://comic-gardo.com/",
   parser: "gigaviewer",
   enabled: true,

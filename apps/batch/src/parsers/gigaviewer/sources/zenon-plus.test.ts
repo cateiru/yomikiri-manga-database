@@ -7,7 +7,7 @@ import { extract } from "./zenon-plus.js";
 const source: Source = {
   key: "zenon-plus",
   name: "ゼノンプラス",
-  listUrl: "https://comic-zenon.com/series/oneshot",
+  listUrls: ["https://comic-zenon.com/series/oneshot"],
   siteUrl: "https://comic-zenon.com/",
   parser: "gigaviewer",
   enabled: true,

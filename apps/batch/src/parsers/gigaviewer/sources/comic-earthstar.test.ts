@@ -7,7 +7,7 @@ import { extract } from "./comic-earthstar.js";
 const source: Source = {
   key: "comic-earthstar",
   name: "コミックアース・スター",
-  listUrl: "https://comic-earthstar.com/oneshot",
+  listUrls: ["https://comic-earthstar.com/oneshot"],
   siteUrl: "https://comic-earthstar.com/",
   parser: "gigaviewer",
   enabled: true,

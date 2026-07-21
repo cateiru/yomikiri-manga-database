@@ -7,7 +7,7 @@ import { extract } from "./comic-action.js";
 const source: Source = {
   key: "comic-action",
   name: "コミックアクション",
-  listUrl: "https://comic-action.com/series/oneshot",
+  listUrls: ["https://comic-action.com/series/oneshot"],
   siteUrl: "https://comic-action.com/",
   parser: "gigaviewer",
   enabled: true,

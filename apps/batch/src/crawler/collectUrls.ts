@@ -50,11 +50,10 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
     };
 
     try {
-      const listUrls = [source.listUrl, ...(source.additionalListUrls ?? [])];
       const parsedItems: ParsedOneshotUrl[] = [];
 
-      for (let j = 0; j < listUrls.length; j++) {
-        const listUrl = listUrls[j];
+      for (let j = 0; j < source.listUrls.length; j++) {
+        const listUrl = source.listUrls[j];
         if (!listUrl) {
           continue;
         }
@@ -68,7 +67,7 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
         const html = await fetchHtml(listUrl);
         parsedItems.push(...gigaviewerParser.parse(html, source));
 
-        if (j < listUrls.length - 1) {
+        if (j < source.listUrls.length - 1) {
           await sleep(REQUEST_INTERVAL_MS);
         }
       }

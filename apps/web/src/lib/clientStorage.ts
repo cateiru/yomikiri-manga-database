@@ -113,3 +113,17 @@ export function removeFavoriteOneshotId(oneshotId: number): void {
     ids.filter((id) => id !== oneshotId),
   );
 }
+
+/** デバッグページから localStorage の状態を初期化するために使う */
+export function resetAllStoredState(): void {
+  for (const key of [
+    ANONYMOUS_USER_ID_KEY,
+    PENDING_READ_KEY,
+    VOTED_ONESHOT_IDS_KEY,
+    SKIPPED_ONESHOT_IDS_KEY,
+    READ_ONESHOT_IDS_KEY,
+    FAVORITE_ONESHOT_IDS_KEY,
+  ]) {
+    window.localStorage.removeItem(key);
+  }
+}

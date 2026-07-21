@@ -7,6 +7,7 @@ import {
   addVotedOneshotId,
   clearPendingRead,
   getPendingRead,
+  getReadOneshotIds,
   getSkippedOneshotIds,
   getVotedOneshotIds,
 } from "@/lib/clientStorage";
@@ -14,7 +15,10 @@ import type { Genre } from "@/lib/genres";
 import type { OneshotListItem } from "@/lib/oneshots";
 import { fetchOneshotByIdAction } from "@/lib/oneshotsActions";
 import { evaluatePendingRead } from "@/lib/readDetection";
+import { ShareModal } from "./ShareModal";
 import { VoteModal } from "./VoteModal";
+
+const SHARE_MILESTONE_READ_COUNTS = [5, 50, 100];
 
 interface VoteModalControllerProps {
   items: OneshotListItem[];
@@ -24,14 +28,27 @@ interface VoteModalControllerProps {
 
 export function VoteModalController({ items, genres, onRead }: VoteModalControllerProps) {
   const [target, setTarget] = useState<OneshotListItem | null>(null);
+  const [shareMilestone, setShareMilestone] = useState<number | null>(null);
 
   const markRead = useCallback(
     (oneshotId: number) => {
+      const isNewRead = !getReadOneshotIds().includes(oneshotId);
       addReadOneshotId(oneshotId);
       onRead?.(oneshotId);
+
+      if (isNewRead) {
+        const readCount = getReadOneshotIds().length;
+        if (SHARE_MILESTONE_READ_COUNTS.includes(readCount)) {
+          setShareMilestone(readCount);
+        }
+      }
     },
     [onRead],
   );
+
+  const closeVoteModal = useCallback(() => {
+    setTarget(null);
+  }, []);
 
   const checkPendingRead = useCallback(() => {
     const result = evaluatePendingRead({
@@ -76,22 +93,30 @@ export function VoteModalController({ items, genres, onRead }: VoteModalControll
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [checkPendingRead]);
 
-  if (!target) {
+  if (!target && shareMilestone === null) {
     return null;
   }
 
-  return (
-    <VoteModal
-      item={target}
-      genres={genres}
-      onSkip={() => {
-        addSkippedOneshotId(target.id);
-        setTarget(null);
-      }}
-      onVoted={() => {
-        addVotedOneshotId(target.id);
-        setTarget(null);
-      }}
-    />
-  );
+  if (target) {
+    return (
+      <VoteModal
+        item={target}
+        genres={genres}
+        onSkip={() => {
+          addSkippedOneshotId(target.id);
+          closeVoteModal();
+        }}
+        onVoted={() => {
+          addVotedOneshotId(target.id);
+          closeVoteModal();
+        }}
+      />
+    );
+  }
+
+  if (shareMilestone !== null) {
+    return <ShareModal readCount={shareMilestone} onClose={() => setShareMilestone(null)} />;
+  }
+
+  return null;
 }

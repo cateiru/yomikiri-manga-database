@@ -5,7 +5,7 @@ import { listGenres } from "@/lib/genres";
 import { getOneshotsPage } from "@/lib/oneshots";
 import styles from "./page.module.css";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 interface TopPageProps {
   searchParams: Promise<{ genre?: string | string[] }>;

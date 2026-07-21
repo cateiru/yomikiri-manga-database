@@ -1,6 +1,5 @@
 .helpItem {
   grid-column: span 2;
-  align-self: start;
 }
 
 .sentinel {

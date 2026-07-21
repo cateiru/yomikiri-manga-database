@@ -85,21 +85,26 @@ GigaViewer で共通化されているのはビューワー・履歴ページの
     {
       "key": "comic-days",
       "name": "コミックDAYS",
-      "listUrl": "https://comic-days.com/oneshot",
+      "listUrls": ["https://comic-days.com/oneshot", "https://comic-days.com/newcomer"],
+      "siteUrl": "https://comic-days.com/",
       "parser": "gigaviewer",
-      "enabled": true
+      "enabled": true,
+      "favicon": "/favicons/comic-days.png"
     }
   ]
 }
 ```
 
-| フィールド | 型      | 説明                                                |
-| ---------- | ------- | --------------------------------------------------- |
-| `key`      | string  | サービスの一意なキー。DB の `source_key` に保存する |
-| `name`     | string  | 表示用のサービス名                                  |
-| `listUrl`  | string  | 読み切り一覧ページの URL                            |
-| `parser`   | string  | 使用するパーサー種別。当面は `gigaviewer` のみ      |
-| `enabled`  | boolean | `false` にするとクロール対象から除外する            |
+| フィールド          | 型      | 説明                                                                                     |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `key`                | string  | サービスの一意なキー。DB の `source_key` に保存する                                     |
+| `name`               | string  | 表示用のサービス名                                                                       |
+| `listUrls`           | array   | 同じ `parser`・同じ `source.key` で解析する読み切り一覧ページ URL の配列（1 件以上）    |
+| `siteUrl`            | string  | サービスのトップページ URL。詳細取得バッチでの robots.txt 取得元（`/about` ページ等の紹介リンクにも使用）。一覧ページの robots.txt は `listUrls` の各 URL ごとに個別取得する |
+| `parser`             | string  | 使用するパーサー種別。当面は `gigaviewer` のみ                                           |
+| `enabled`            | boolean | `false` にするとクロール対象から除外する                                                 |
+| `favicon`            | string  | `apps/web/public/favicons/` 以下に配置した favicon 画像への絶対パス。一覧カードに表示する |
+| `fallbackSourceKey`  | string（任意） | 姉妹サイト等で同一作品が重複掲載される場合に指定する。指定した source に既に同一パス（クエリ除く）の viewer URL が登録済みなら、このソースでの登録をスキップする |
 
 サービスの追加は `sources` 配列へのエントリ追加のみで完結させる。
 
@@ -136,10 +141,10 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 | `label`      | text    | not null         | 表示名（例: バトル）     |
 | `sort_order` | integer | not null         | 投票モーダルでの表示順   |
 
-固定リストとして seed する。初期ジャンル案は次の通り。
+固定リストとして seed する。ジャンル一覧は次の通り。
 
 バトル / 恋愛 / コメディ・ギャグ / ホラー / SF / ファンタジー /
-ミステリー・サスペンス / 日常 / スポーツ / ヒューマンドラマ
+ミステリー・サスペンス / 日常 / スポーツ / ヒューマンドラマ / グルメ / NSFW
 
 ### 5.3 genre_votes（ジャンル投票）
 
@@ -163,8 +168,10 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
   - サムネイル画像
   - タイトル
   - 作者名
-  - 掲載サービス名（例: コミックDAYS）
+  - 掲載サービス名（例: コミックDAYS、ファビコン付き）
   - ジャンルバッジ（得票数上位 3 件、投票が無い場合は非表示）
+  - お気に入りボタン（トグル式。状態は localStorage で管理し「6.3 お気に入り一覧ページ」に反映する）
+- 既読（読了検知済み）の作品はカードの見た目を変えて区別する
 - ソート: 掲載日時（`published_at`）の新しい順。同着の場合はタイトルの昇順。
   `published_at` が未取得の作品は末尾に表示する
 - フィルタ: ジャンルによる絞り込み
@@ -179,6 +186,13 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
   - 固定ジャンルリストのチップ（複数選択可）
   - 「投票する」「スキップ」ボタン
 - スキップした作品には再度モーダルを出さない（localStorage に記録）
+
+### 6.3 お気に入り一覧ページ
+
+- トップページのカードでお気に入り登録した作品のみを一覧表示する専用ページ（`/favorites`）
+- 表示順はお気に入り登録順（最近登録した作品が先頭）
+- 登録済み作品が無い場合は空状態表示を出す
+- お気に入り状態はサーバーに保存せず、localStorage（匿名・端末ローカル）のみで管理する
 
 ## 7. 読了検知・投票フロー
 
@@ -195,9 +209,10 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 
 1. 「読む」クリック時に localStorage へ `{ oneshotId, clickedAt }` を保存し、外部ビューワーを新規タブで開く
 2. 元タブへの復帰（`visibilitychange` で visible になったとき）または再訪問時に、保存した記録を確認する
-3. `clickedAt` から **60 秒以上** 経過していれば読了とみなし、ジャンル投票モーダルを表示する
-4. 60 秒未満（すぐ戻ってきた）の場合は読了とみなさず、記録を破棄する
+3. `clickedAt` から **10 秒以上** 経過していれば読了とみなし、ジャンル投票モーダルを表示する
+4. 10 秒未満（すぐ戻ってきた）の場合は読了とみなさず、記録を破棄する
 5. 投票済み・スキップ済みの作品は localStorage に記録し、再表示しない
+6. 読了とみなした作品は既読として localStorage に記録し、トップページのカード表示に反映する
 
 ### 7.3 ジャンル集計・表示
 
@@ -224,7 +239,7 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 各サイトの読み切り一覧ページからビューワー URL を集め、`oneshots` へ登録する。
 
 1. `sources.json` を読み込み、`enabled: true` のソースを対象とする
-2. 各ソースの `listUrl` に HTTP GET でアクセスする
+2. 各ソースの `listUrls` に列挙された URL それぞれに HTTP GET でアクセスする
 3. `parser` に対応するパーサー（`gigaviewer`）で HTML をパースし、ビューワー URL を抽出する
    （一覧ページの構造・連載作品との混在有無はソースごとに異なるため、
    対象要素の絞り込みは `source.key` 単位で実装する）
@@ -290,14 +305,16 @@ GigaViewer はビューワーページのデザインが全サービス共通で
 
 レスポンス:
 
-| ステータス        | 条件                                             |
-| ----------------- | ------------------------------------------------ |
-| `201 Created`     | 投票を登録した（重複分は無視して成功扱い）       |
-| `400 Bad Request` | ボディ不正（UUID 形式エラー、genreIds が空など） |
-| `404 Not Found`   | 対象の読み切りが存在しない                       |
+| ステータス                  | 条件                                             |
+| --------------------------- | ------------------------------------------------ |
+| `201 Created`               | 投票を登録した（重複分は無視して成功扱い）       |
+| `400 Bad Request`           | ボディ不正（UUID 形式エラー、genreIds が空など） |
+| `404 Not Found`             | 対象の読み切りが存在しない                       |
+| `429 Too Many Requests`     | 同一 IP からの連続投稿によるレート制限超過       |
 
 - 重複投票は unique 制約違反を `ON CONFLICT DO NOTHING` で吸収する
-- 簡易的な rate limit（同一 IP からの連続投稿制限）を Workers 側で検討する
+- 簡易的な rate limit（同一 IP からの連続投稿制限）を Workers 側で実装する
+  （IP は `cf-connecting-ip` ヘッダーから取得する）
 
 ## 10. リポジトリ構成
 
@@ -314,7 +331,9 @@ yomikiri-manga-database/
 ├── packages/
 │   └── db/           # Drizzle スキーマ・マイグレーション（web / batch で共有）
 ├── docs/
-│   └── 001_plan.md   # 本仕様書
+│   ├── 001_plan.md   # 本仕様書
+│   ├── 002_design.md # デザインドキュメント
+│   └── plans/        # 機能ごとの実装計画
 ├── compose.yaml      # ローカル開発環境（12 章）
 ├── sources.json      # クロール対象サービス定義
 ├── package.json
@@ -337,17 +356,20 @@ yomikiri-manga-database/
 ローカル環境は Docker Compose で起動する。Neon は本番専用とし、
 ローカルの DB には PostgreSQL コンテナを使用する。
 
-| サービス | 内容                                       | 起動方法                        |
-| -------- | ------------------------------------------ | ------------------------------- |
-| `db`     | PostgreSQL。named volume でデータを永続化  | `docker compose up`             |
-| `web`    | Next.js 開発サーバ（ポート 3000）          | `docker compose up`             |
-| `batch`  | バッチの手動実行用（one-shot）             | `docker compose run --rm batch` |
+| サービス  | 内容                                                          | 起動方法                        |
+| --------- | ------------------------------------------------------------- | -------------------------------- |
+| `db`      | PostgreSQL。named volume でデータを永続化                     | `docker compose up`             |
+| `web`     | Next.js 開発サーバ（ポート 3000）                              | `docker compose up`             |
+| `wsproxy` | `web` が使う `@neondatabase/serverless`（WebSocket）を `db` への通常 TCP 接続へ変換する中継 | `docker compose up`（`web` の起動に伴い自動起動） |
+| `batch`   | バッチの手動実行用（one-shot）                                 | `docker compose run --rm batch` |
 
 - `web` / `batch` は Node.js コンテナにリポジトリを bind mount し、pnpm で実行する
 - `batch` は常駐プロセスではないため `profiles` を指定し、
   `docker compose up` の起動対象から除外する
 - `DATABASE_URL` は compose 内で `db` サービスを指す値を設定し、
   ローカルでの個別の環境変数設定を不要にする
+- `web` コンテナは起動のたびに `apps/web/.dev.vars` を `db`（`wsproxy` 経由）向けの内容で
+  上書きする。Docker を使わずホストで直接 `next dev` する場合はこの上書きに注意すること
 - セットアップ手順・compose の詳細は
   [007 ローカル開発環境・CI](./plans/007_ローカル開発環境・CI.md) を参照
 

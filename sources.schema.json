@@ -45,7 +45,7 @@
         "siteUrl": {
           "type": "string",
           "format": "uri",
-          "description": "サービスのトップページ URL。/about ページ等での紹介リンクに使用する"
+          "description": "サービスのトップページ URL。詳細取得バッチでの robots.txt 取得元、/about ページ等での紹介リンクに使用する"
         },
         "favicon": {
           "type": "string",

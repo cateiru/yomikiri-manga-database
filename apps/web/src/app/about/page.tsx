@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClearHistoryButton } from "@/components/ClearHistoryButton";
 import { getLatestDataUpdatedAt } from "@/lib/oneshots";
 import { listSources } from "@/lib/sources";
 import styles from "./page.module.css";
@@ -66,6 +67,15 @@ export default async function AboutPage() {
           <a href="mailto:yomikiri-manga@cateiru.com">yomikiri-manga@cateiru.com</a>{" "}
           までご連絡ください。
         </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.heading}>閲覧履歴の消去</h2>
+        <p>
+          既読・お気に入り・投票・スキップの記録は、この端末のブラウザ内にのみ保存されています。
+          以下のボタンから、これらの記録をすべて消去できます。
+        </p>
+        <ClearHistoryButton />
       </section>
     </main>
   );

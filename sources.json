@@ -60,6 +60,7 @@
       "key": "magcomi",
       "name": "マグコミ",
       "listUrl": "https://magcomi.com/series/oneshot",
+      "additionalListUrls": ["https://magcomi.com/series/award_other#award"],
       "siteUrl": "https://magcomi.com/",
       "parser": "gigaviewer",
       "enabled": true,

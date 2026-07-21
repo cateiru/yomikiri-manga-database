@@ -5,7 +5,7 @@ import { buildUrlItem } from "../common.js";
 
 export function extract($: CheerioAPI, source: Source): ParsedOneshotUrl[] {
   const items: ParsedOneshotUrl[] = [];
-  const container = $("h2#oneshot").next("ul");
+  const container = $("h2#oneshot, h2#award").next("ul");
 
   container.find("li[class*='SeriesItem_series_item']").each((_, el) => {
     const li = $(el);

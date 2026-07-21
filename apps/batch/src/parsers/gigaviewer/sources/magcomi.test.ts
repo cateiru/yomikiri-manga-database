@@ -24,4 +24,14 @@ describe("gigaviewer/magcomi", () => {
       expect(item.viewerUrl).toMatch(/^https:\/\/magcomi\.com\/episode\/\d+$/);
     }
   });
+
+  it("漫画賞ページから漫画賞作品のみを抽出できる（アンソロジーは含まない）", () => {
+    const $ = load(loadFixture("magcomi-award"));
+    const items = extract($, source);
+
+    expect(items).toEqual([
+      { viewerUrl: "https://magcomi.com/episode/2000000000000000001" },
+      { viewerUrl: "https://magcomi.com/episode/2000000000000000002" },
+    ]);
+  });
 });

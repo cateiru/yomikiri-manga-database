@@ -1,0 +1,10 @@
+services:
+  # 本番バッチ。systemd timer から `docker compose -f compose.prod.yaml run --rm batch`
+  # として都度起動・都度破棄する（restart は指定しない。常駐させると
+  # 正常終了のたびに再起動してしまい「6 時間ごと」の実行間隔と両立しないため）
+  batch:
+    build:
+      context: .
+      dockerfile: apps/batch/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}

@@ -1,0 +1,14 @@
+**/node_modules
+.pnpm-store
+.git
+
+# Next.js / OpenNext / Cloudflare（apps/batch のイメージには不要）
+apps/web/.next
+apps/web/.open-next
+apps/web/.wrangler
+apps/web/cloudflare-env.d.ts
+
+.vscode
+.claude
+.github
+docs

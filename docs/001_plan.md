@@ -230,7 +230,8 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 
 ### 8.1 実行環境
 
-- さくらVPS 上で Node.js（TypeScript）製バッチを systemd timer により **6 時間ごと** に実行する
+- さくらVPS 上で Node.js（TypeScript）製バッチを Docker コンテナ化し、systemd timer により
+  **6 時間ごと** に起動・実行する（コンテナは実行のたびに起動・破棄する oneshot 運用とし、常駐はさせない）
 - Neon へは通常の PostgreSQL 接続（`postgres` ドライバ）で接続する
 - 1 回の実行で「8.2 URL 収集バッチ」→「8.3 詳細取得バッチ」を順に実行する
 
@@ -345,7 +346,10 @@ yomikiri-manga-database/
 - **DB 接続**: Workers からは `@neondatabase/serverless`（HTTP/WebSocket）、
   VPS からは通常の TCP 接続と、環境ごとにドライバを使い分ける
 - **キャッシュ**: トップページは ISR でキャッシュし、Neon への負荷とレイテンシを抑える
-- **秘匿情報**: DB 接続文字列は Workers では `wrangler secret`、VPS では環境変数で管理する
+- **秘匿情報**: DB 接続文字列は Workers では `wrangler secret`、VPS では環境ファイル
+  （`EnvironmentFile=`、パーミッション 600）で管理する
+- **監視**: VPS 上のバッチは Mackerel（`mackerel-agent`）で死活監視する。実行成否を即時検知するチェックと、
+  実行漏れ・ハングを検知する鮮度チェック（最終成功時刻の監視）を組み合わせる
 - **画像**: サムネイルは外部 URL を直接参照する（ホットリンク）。
   各サービス側で禁止されている場合はプレースホルダー表示に切り替える
 - **法的配慮**: 収集するのはタイトル等の事実情報とリンクのみとし、

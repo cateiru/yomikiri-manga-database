@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## リポジトリ構成（pnpm workspace）
 
 - `apps/web` — 一覧表示・投票 UI（Next.js App Router、`@opennextjs/cloudflare` で Cloudflare Workers にデプロイ）
-- `apps/batch` — 各サービスをクロールしてデータを収集するバッチ（さくら VPS 上で Node.js、systemd timer で 6 時間ごと実行）
+- `apps/batch` — 各サービスをクロールしてデータを収集するバッチ（さくら VPS 上で Docker コンテナとして systemd timer により 6 時間ごと実行、Mackerel で監視）
 - `packages/db` — Drizzle ORM のスキーマ・マイグレーション・DB クライアント（web / batch で共有）
 - `sources.json` / `sources.schema.json` — クロール対象サービスの宣言的定義（リポジトリ直下）
 

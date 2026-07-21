@@ -1,0 +1,11 @@
+[Unit]
+Description=yomikiri-manga-database batch (Docker)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/yomikiri/batch.env
+WorkingDirectory=/opt/yomikiri/app
+ExecStart=/opt/yomikiri/app/deploy/bin/run-batch.sh

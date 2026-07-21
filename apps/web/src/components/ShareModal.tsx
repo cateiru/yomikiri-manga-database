@@ -77,9 +77,9 @@ export function ShareModal({ readCount, onClose }: ShareModalProps) {
         onKeyDown={trapFocus}
       >
         <p id="share-modal-title" className={styles.title}>
-          {readCount}作品読破しました！
+          読み切り漫画データベースをシェアしませんか？
         </p>
-        <p className={styles.description}>読み切り漫画データベースをシェアしませんか？</p>
+        <p className={styles.description}>{readCount}作品読破しました！</p>
         <ul className={styles.shareList}>
           <li>
             <XShareButton url={shareUrl} title={shareTitle} className={styles.shareButton}>

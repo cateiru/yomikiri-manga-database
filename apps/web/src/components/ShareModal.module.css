@@ -41,9 +41,34 @@
   list-style: none;
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-start;
   gap: var(--space-3);
   margin: 0;
   padding: 0;
+}
+
+/* 425px 未満は幅に関わらず横3カラム固定にする */
+@media (max-width: 424px) {
+  .shareList {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    justify-content: center;
+  }
+
+  .shareButton {
+    width: auto;
+  }
+}
+
+@media (min-width: 640px) {
+  .dialog {
+    max-width: 560px;
+  }
+
+  .shareList {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
 }
 
 .shareButton {

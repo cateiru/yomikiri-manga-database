@@ -14,6 +14,7 @@ export function Header({ oneshotsCount }: HeaderProps) {
         </Link>
         <span className={styles.count}>作品数 {oneshotsCount.toLocaleString()}</span>
         <nav className={styles.nav}>
+          <Link href="/favorites">お気に入り</Link>
           <Link href="/about">このサイトについて</Link>
         </nav>
       </div>

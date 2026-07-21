@@ -214,6 +214,30 @@ export async function getOneshotsCount(): Promise<number> {
   return Number(row?.count ?? 0);
 }
 
+/** 戻り値の順序は保証しない。呼び出し元で並び替えること */
+export async function getOneshotsByIds(ids: number[]): Promise<OneshotListItem[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: oneshots.id,
+      title: oneshots.title,
+      author: oneshots.author,
+      thumbnailUrl: oneshots.thumbnailUrl,
+      viewerUrl: oneshots.viewerUrl,
+      sourceKey: oneshots.sourceKey,
+      publishedAt: oneshots.publishedAt,
+      firstSeenAt: oneshots.firstSeenAt,
+    })
+    .from(oneshots)
+    .where(and(inArray(oneshots.id, ids), isNotNull(oneshots.title)));
+
+  return attachGenreBadges(db, rows);
+}
+
 export async function getOneshotById(id: number): Promise<OneshotListItem | null> {
   const db = await getDb();
   const rows = await db

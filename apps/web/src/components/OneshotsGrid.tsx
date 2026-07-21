@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import styles from "@/app/page.module.css";
-import { getReadOneshotIds } from "@/lib/clientStorage";
+import {
+  addFavoriteOneshotId,
+  getFavoriteOneshotIds,
+  getReadOneshotIds,
+  removeFavoriteOneshotId,
+} from "@/lib/clientStorage";
 import type { Genre } from "@/lib/genres";
 import type { OneshotListItem, OneshotsCursor } from "@/lib/oneshots";
 import { loadMoreOneshotsAction } from "@/lib/oneshotsActions";
@@ -29,11 +34,13 @@ export function OneshotsGrid({
   const [isPending, startTransition] = useTransition();
   const [loadError, setLoadError] = useState(false);
   const [readIds, setReadIds] = useState<Set<number>>(new Set());
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const loadingRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setReadIds(new Set(getReadOneshotIds()));
+    setFavoriteIds(new Set(getFavoriteOneshotIds()));
   }, []);
 
   const markRead = useCallback((oneshotId: number) => {
@@ -42,6 +49,20 @@ export function OneshotsGrid({
         return prev;
       }
       return new Set(prev).add(oneshotId);
+    });
+  }, []);
+
+  const toggleFavorite = useCallback((oneshotId: number) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(oneshotId)) {
+        removeFavoriteOneshotId(oneshotId);
+        next.delete(oneshotId);
+      } else {
+        addFavoriteOneshotId(oneshotId);
+        next.add(oneshotId);
+      }
+      return next;
     });
   }, []);
 
@@ -90,7 +111,12 @@ export function OneshotsGrid({
       <ul className={styles.grid}>
         {items.map((item) => (
           <li key={item.id}>
-            <OneshotCard item={item} isRead={readIds.has(item.id)} />
+            <OneshotCard
+              item={item}
+              isRead={readIds.has(item.id)}
+              isFavorite={favoriteIds.has(item.id)}
+              onToggleFavorite={toggleFavorite}
+            />
           </li>
         ))}
       </ul>

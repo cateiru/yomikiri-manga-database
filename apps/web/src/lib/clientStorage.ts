@@ -3,6 +3,7 @@ const PENDING_READ_KEY = "pendingRead";
 const VOTED_ONESHOT_IDS_KEY = "votedOneshotIds";
 const SKIPPED_ONESHOT_IDS_KEY = "skippedOneshotIds";
 const READ_ONESHOT_IDS_KEY = "readOneshotIds";
+const FAVORITE_ONESHOT_IDS_KEY = "favoriteOneshotIds";
 
 export interface PendingRead {
   oneshotId: number;
@@ -91,4 +92,24 @@ export function addReadOneshotId(oneshotId: number): void {
   if (!ids.includes(oneshotId)) {
     writeJson(READ_ONESHOT_IDS_KEY, [...ids, oneshotId]);
   }
+}
+
+/** 追加順（末尾が最新）で並んだお気に入り作品 ID の一覧 */
+export function getFavoriteOneshotIds(): number[] {
+  return readIdList(FAVORITE_ONESHOT_IDS_KEY);
+}
+
+export function addFavoriteOneshotId(oneshotId: number): void {
+  const ids = getFavoriteOneshotIds();
+  if (!ids.includes(oneshotId)) {
+    writeJson(FAVORITE_ONESHOT_IDS_KEY, [...ids, oneshotId]);
+  }
+}
+
+export function removeFavoriteOneshotId(oneshotId: number): void {
+  const ids = getFavoriteOneshotIds();
+  writeJson(
+    FAVORITE_ONESHOT_IDS_KEY,
+    ids.filter((id) => id !== oneshotId),
+  );
 }

@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -7,10 +8,56 @@
   color: var(--color-ink);
   border: var(--border-width) solid var(--color-ink);
   box-shadow: var(--shadow-sm);
-  text-decoration: none;
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+.link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.favoriteButton {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-ink-40);
+  border: var(--border-width) solid var(--color-ink);
+  cursor: pointer;
+}
+
+.favoriteButton:hover {
+  color: var(--color-ink);
+}
+
+.favoriteButton.favorited {
+  color: var(--color-favorite);
+}
+
+.favoriteButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .card:hover {
@@ -18,7 +65,7 @@
   transform: translate(-2px, -2px);
 }
 
-.card:active {
+.card:active:not(:has(.favoriteButton:active)) {
   box-shadow: none;
   transform: translate(2px, 2px);
 }
@@ -66,7 +113,15 @@
   padding: var(--space-3);
 }
 
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
 .title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-size: var(--text-md);
   font-weight: 700;

@@ -5,6 +5,7 @@
       "key": "comic-days",
       "name": "コミックDAYS",
       "listUrl": "https://comic-days.com/oneshot",
+      "additionalListUrls": ["https://comic-days.com/newcomer"],
       "siteUrl": "https://comic-days.com/",
       "parser": "gigaviewer",
       "enabled": true,

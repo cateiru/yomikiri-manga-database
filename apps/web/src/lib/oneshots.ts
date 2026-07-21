@@ -3,6 +3,7 @@ import { genres, genreVotes, oneshots } from "@yomikiri/db/schema";
 import {
   and,
   asc,
+  desc,
   eq,
   exists,
   gt,
@@ -202,6 +203,17 @@ export async function getOneshotsPage(
   cursor: OneshotsCursor | null = null,
 ): Promise<OneshotsPage> {
   return fetchOneshotsPage(await getDb(), genreKeys, cursor);
+}
+
+export async function getLatestDataUpdatedAt(): Promise<Date | null> {
+  const db = await getDb();
+  const [row] = await db
+    .select({ lastSeenAt: oneshots.lastSeenAt })
+    .from(oneshots)
+    .orderBy(desc(oneshots.lastSeenAt))
+    .limit(1);
+
+  return row?.lastSeenAt ?? null;
 }
 
 export async function getOneshotsCount(): Promise<number> {

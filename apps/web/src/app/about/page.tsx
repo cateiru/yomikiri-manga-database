@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getLatestDataUpdatedAt } from "@/lib/oneshots";
 import { listSources } from "@/lib/sources";
 import styles from "./page.module.css";
 
@@ -9,8 +10,18 @@ export const metadata: Metadata = {
   description: "読み切り漫画データベースの概要と、掲載作品の取得元一覧",
 };
 
-export default function AboutPage() {
+const lastUpdatedFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export default async function AboutPage() {
   const sources = listSources();
+  const lastUpdatedAt = await getLatestDataUpdatedAt();
 
   return (
     <main className={styles.main}>
@@ -30,6 +41,11 @@ export default function AboutPage() {
       <section className={styles.section}>
         <h2 className={styles.heading}>データの取得元</h2>
         <p>掲載している作品の情報は、以下の各サービスの公開ページから定期的に取得しています。</p>
+        <p>
+          {lastUpdatedAt
+            ? `データ最終更新: ${lastUpdatedFormatter.format(lastUpdatedAt)}`
+            : "データ最終更新: 未実行"}
+        </p>
         <ul className={styles.sourceList}>
           {sources.map((source) => (
             <li key={source.key} className={styles.sourceItem}>

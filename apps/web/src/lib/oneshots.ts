@@ -19,6 +19,8 @@ import { getDb } from "./db";
 
 const TOP_GENRE_COUNT = 3;
 export const ONESHOTS_PAGE_SIZE = 24;
+// ヘルプ導線カードがグリッドの2カラム分を占有するため、初回表示分はその分だけ作品数を減らす
+export const HELP_CARD_COLUMN_SPAN = 2;
 
 export interface OneshotGenreBadge {
   id: number;
@@ -157,6 +159,7 @@ async function fetchOneshotsPage(
   db: Db,
   genreKeys: string[],
   cursor: OneshotsCursor | null,
+  pageSize: number,
 ): Promise<OneshotsPage> {
   // 詳細取得バッチが未処理（title 未取得）の行は表示対象から除外する
   const filterCondition = and(
@@ -179,10 +182,10 @@ async function fetchOneshotsPage(
     .from(oneshots)
     .where(filterCondition)
     .orderBy(sql`${oneshots.publishedAt} desc nulls last`, asc(oneshots.title), asc(oneshots.id))
-    .limit(ONESHOTS_PAGE_SIZE + 1);
+    .limit(pageSize + 1);
 
-  const hasMore = rows.length > ONESHOTS_PAGE_SIZE;
-  const pageRows = hasMore ? rows.slice(0, ONESHOTS_PAGE_SIZE) : rows;
+  const hasMore = rows.length > pageSize;
+  const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
   const items = await attachGenreBadges(db, pageRows);
 
   const last = pageRows.at(-1);
@@ -201,8 +204,9 @@ async function fetchOneshotsPage(
 export async function getOneshotsPage(
   genreKeys: string[],
   cursor: OneshotsCursor | null = null,
+  pageSize: number = ONESHOTS_PAGE_SIZE,
 ): Promise<OneshotsPage> {
-  return fetchOneshotsPage(await getDb(), genreKeys, cursor);
+  return fetchOneshotsPage(await getDb(), genreKeys, cursor, pageSize);
 }
 
 export async function getLatestDataUpdatedAt(): Promise<Date | null> {

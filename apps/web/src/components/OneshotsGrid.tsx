@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import styles from "@/app/page.module.css";
 import {
   addFavoriteOneshotId,
@@ -12,9 +12,13 @@ import type { Genre } from "@/lib/genres";
 import type { OneshotListItem, OneshotsCursor } from "@/lib/oneshots";
 import { loadMoreOneshotsAction } from "@/lib/oneshotsActions";
 import { EmptyState } from "./EmptyState";
+import { HelpCard } from "./HelpCard";
 import { OneshotCard } from "./OneshotCard";
 import gridStyles from "./OneshotsGrid.module.css";
 import { VoteModalController } from "./VoteModalController";
+
+// 4カラム表示（PC）の3段目先頭に来る位置に、2カラム分のヘルプ導線カードを差し込む
+const HELP_CARD_INDEX = 8;
 
 interface OneshotsGridProps {
   genreKeys: string[];
@@ -109,16 +113,28 @@ export function OneshotsGrid({
   return (
     <>
       <ul className={styles.grid}>
-        {items.map((item) => (
-          <li key={item.id}>
-            <OneshotCard
-              item={item}
-              isRead={readIds.has(item.id)}
-              isFavorite={favoriteIds.has(item.id)}
-              onToggleFavorite={toggleFavorite}
-            />
-          </li>
+        {items.map((item, index) => (
+          <Fragment key={item.id}>
+            {index === HELP_CARD_INDEX ? (
+              <li className={gridStyles.helpItem}>
+                <HelpCard />
+              </li>
+            ) : null}
+            <li>
+              <OneshotCard
+                item={item}
+                isRead={readIds.has(item.id)}
+                isFavorite={favoriteIds.has(item.id)}
+                onToggleFavorite={toggleFavorite}
+              />
+            </li>
+          </Fragment>
         ))}
+        {items.length <= HELP_CARD_INDEX ? (
+          <li className={gridStyles.helpItem}>
+            <HelpCard />
+          </li>
+        ) : null}
       </ul>
       {cursor ? (
         <div ref={sentinelRef} className={gridStyles.sentinel}>

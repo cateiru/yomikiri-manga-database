@@ -16,6 +16,7 @@ const GENRES = [
   { key: "sports", label: "スポーツ", sortOrder: 9 },
   { key: "drama", label: "ヒューマンドラマ", sortOrder: 10 },
   { key: "gourmet", label: "グルメ", sortOrder: 11 },
+  { key: "nsfw", label: "NSFW", sortOrder: 12 },
 ] as const;
 
 async function main() {

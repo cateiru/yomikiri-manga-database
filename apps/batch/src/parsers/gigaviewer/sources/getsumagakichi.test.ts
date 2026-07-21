@@ -8,6 +8,7 @@ const source: Source = {
   key: "getsumagakichi",
   name: "月マガ基地",
   listUrl: "https://getsumagakichi.com/series/oneshot_newcomer",
+  siteUrl: "https://getsumagakichi.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/getsumagakichi.png",

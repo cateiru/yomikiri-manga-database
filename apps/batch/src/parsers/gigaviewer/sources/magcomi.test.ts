@@ -8,6 +8,7 @@ const source: Source = {
   key: "magcomi",
   name: "マグコミ",
   listUrl: "https://magcomi.com/series/oneshot",
+  siteUrl: "https://magcomi.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/magcomi.png",

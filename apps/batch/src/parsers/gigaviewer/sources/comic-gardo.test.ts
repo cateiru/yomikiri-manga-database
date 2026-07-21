@@ -8,6 +8,7 @@ const source: Source = {
   key: "comic-gardo",
   name: "コミックガルド",
   listUrl: "https://comic-gardo.com/series/oneshot",
+  siteUrl: "https://comic-gardo.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/comic-gardo.png",

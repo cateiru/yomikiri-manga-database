@@ -8,6 +8,7 @@ const source: Source = {
   key: "jump-plus",
   name: "少年ジャンプ+",
   listUrl: "https://shonenjumpplus.com/series/oneshot",
+  siteUrl: "https://shonenjumpplus.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/jump-plus.png",

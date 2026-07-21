@@ -8,6 +8,7 @@ const source: Source = {
   key: "tonarinoyj",
   name: "となりのヤングジャンプ",
   listUrl: "https://tonarinoyj.jp/series/oneshot",
+  siteUrl: "https://tonarinoyj.jp/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/tonarinoyj.png",

@@ -8,6 +8,7 @@ const source: Source = {
   key: "comic-action",
   name: "コミックアクション",
   listUrl: "https://comic-action.com/series/oneshot",
+  siteUrl: "https://comic-action.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/comic-action.png",

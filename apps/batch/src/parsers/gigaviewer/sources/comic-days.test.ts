@@ -8,6 +8,7 @@ const source: Source = {
   key: "comic-days",
   name: "コミックDAYS",
   listUrl: "https://comic-days.com/oneshot",
+  siteUrl: "https://comic-days.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/comic-days.png",

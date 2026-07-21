@@ -8,6 +8,7 @@ const source: Source = {
   key: "kuragebunch",
   name: "くらげバンチ",
   listUrl: "https://kuragebunch.com/series/oneshot",
+  siteUrl: "https://kuragebunch.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/kuragebunch.png",

@@ -8,6 +8,7 @@ const source: Source = {
   key: "mangatime-square",
   name: "まんがタイムスクエア",
   listUrl: "https://mangatime-square.com/series#extra",
+  siteUrl: "https://mangatime-square.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/mangatime-square.png",

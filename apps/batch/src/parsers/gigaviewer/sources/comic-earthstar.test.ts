@@ -8,6 +8,7 @@ const source: Source = {
   key: "comic-earthstar",
   name: "コミックアース・スター",
   listUrl: "https://comic-earthstar.com/oneshot",
+  siteUrl: "https://comic-earthstar.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/comic-earthstar.png",

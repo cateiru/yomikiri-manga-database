@@ -11,6 +11,7 @@ function buildSource(overrides: Partial<Source> = {}): Source {
     key: "morning-two",
     name: "モーニング・ツー",
     listUrl: "https://morningtwo.com/series#%E8%AA%AD%E3%81%BF%E5%88%87%E3%82%8A",
+    siteUrl: "https://morningtwo.com/",
     parser: "gigaviewer",
     enabled: true,
     favicon: "/favicons/morning-two.png",
@@ -64,5 +65,46 @@ describe("collectUrls の fallbackSourceKey 処理", () => {
 
     expect(existingSpy).not.toHaveBeenCalled();
     expect(results[0]).toMatchObject({ sourceKey: "morning-two", fetched: 2, skipped: 0 });
+  });
+});
+
+describe("collectUrls の additionalListUrls 処理", () => {
+  it("additionalListUrls に指定した各ページを取得し、同じ source.key で集約する", async () => {
+    vi.spyOn(robotsModule, "fetchRobotsRules").mockResolvedValue({ isAllowed: () => true });
+    vi.spyOn(fetchHtmlModule, "fetchHtml").mockImplementation(async (url: string) => {
+      if (url === "https://comic-days.com/oneshot") {
+        return `<ul class="yomikiri-items"><li class="yomikiri-item-box"><a class="yomikiri-link" href="https://comic-days.com/episode/1">作品1</a></li></ul>`;
+      }
+      if (url === "https://comic-days.com/oneshot_newcomer") {
+        return `<ul class="yomikiri-items"><li class="yomikiri-item-box"><a class="yomikiri-link" href="https://comic-days.com/episode/2">作品2</a></li></ul>`;
+      }
+      throw new Error(`unexpected url: ${url}`);
+    });
+    const upsertSpy = vi
+      .spyOn(upsert, "upsertOneshotUrls")
+      .mockResolvedValue({ inserted: 2, updated: 0 });
+
+    const source: Source = {
+      key: "comic-days",
+      name: "コミックDAYS",
+      listUrl: "https://comic-days.com/oneshot",
+      additionalListUrls: ["https://comic-days.com/oneshot_newcomer"],
+      siteUrl: "https://comic-days.com/",
+      parser: "gigaviewer",
+      enabled: true,
+      favicon: "/favicons/comic-days.png",
+    };
+
+    const results = await collectUrls({} as Db, [source]);
+
+    expect(upsertSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      "comic-days",
+      expect.arrayContaining([
+        expect.objectContaining({ viewerUrl: "https://comic-days.com/episode/1" }),
+        expect.objectContaining({ viewerUrl: "https://comic-days.com/episode/2" }),
+      ]),
+    );
+    expect(results[0]).toMatchObject({ sourceKey: "comic-days", fetched: 2 });
   });
 });

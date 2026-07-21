@@ -11,6 +11,7 @@ function buildSource(key: string): Source {
     key,
     name: key,
     listUrl: `https://${key}.example.com/oneshot`,
+    siteUrl: `https://${key}.example.com/`,
     parser: "gigaviewer",
     enabled: true,
     favicon: `/favicons/${key}.png`,

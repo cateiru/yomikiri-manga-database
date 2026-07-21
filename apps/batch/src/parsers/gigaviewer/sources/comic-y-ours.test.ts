@@ -8,6 +8,7 @@ const source: Source = {
   key: "comic-y-ours",
   name: "COMIC Y-OURS",
   listUrl: "https://comic-y-ours.com/series/oneshot",
+  siteUrl: "https://comic-y-ours.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/comic-y-ours.png",

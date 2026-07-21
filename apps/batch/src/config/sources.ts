@@ -5,6 +5,8 @@ const sourceSchema = z.object({
   key: z.string().min(1),
   name: z.string().min(1),
   listUrl: z.string().url(),
+  additionalListUrls: z.array(z.string().url()).optional(),
+  siteUrl: z.string().url(),
   parser: z.enum(["gigaviewer"]),
   enabled: z.boolean(),
   favicon: z.string(),

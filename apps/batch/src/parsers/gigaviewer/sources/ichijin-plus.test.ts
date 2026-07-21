@@ -8,6 +8,7 @@ const source: Source = {
   key: "ichijin-plus",
   name: "一迅プラス",
   listUrl: "https://ichicomi.com/series#oneshot",
+  siteUrl: "https://ichicomi.com/",
   parser: "gigaviewer",
   enabled: true,
   favicon: "/favicons/ichijin-plus.png",

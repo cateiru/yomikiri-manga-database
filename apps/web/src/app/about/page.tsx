@@ -50,7 +50,7 @@ export default async function AboutPage() {
           {sources.map((source) => (
             <li key={source.key} className={styles.sourceItem}>
               <img className={styles.favicon} src={source.favicon} alt="" aria-hidden="true" />
-              <a href={source.listUrl} target="_blank" rel="noopener noreferrer">
+              <a href={source.siteUrl} target="_blank" rel="noopener noreferrer">
                 {source.name}
               </a>
             </li>

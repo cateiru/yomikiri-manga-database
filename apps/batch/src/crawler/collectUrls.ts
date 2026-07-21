@@ -50,14 +50,29 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
     };
 
     try {
-      const robots = await fetchRobotsRules(source.listUrl, USER_AGENT);
-      const path = new URL(source.listUrl).pathname;
-      if (!robots.isAllowed(path)) {
-        throw new Error(`robots.txt により ${source.listUrl} へのアクセスが拒否されています`);
+      const listUrls = [source.listUrl, ...(source.additionalListUrls ?? [])];
+      const parsedItems: ParsedOneshotUrl[] = [];
+
+      for (let j = 0; j < listUrls.length; j++) {
+        const listUrl = listUrls[j];
+        if (!listUrl) {
+          continue;
+        }
+
+        const robots = await fetchRobotsRules(listUrl, USER_AGENT);
+        const path = new URL(listUrl).pathname;
+        if (!robots.isAllowed(path)) {
+          throw new Error(`robots.txt により ${listUrl} へのアクセスが拒否されています`);
+        }
+
+        const html = await fetchHtml(listUrl);
+        parsedItems.push(...gigaviewerParser.parse(html, source));
+
+        if (j < listUrls.length - 1) {
+          await sleep(REQUEST_INTERVAL_MS);
+        }
       }
 
-      const html = await fetchHtml(source.listUrl);
-      const parsedItems = gigaviewerParser.parse(html, source);
       result.fetched = parsedItems.length;
 
       const items = await filterFallbackDuplicates(db, source, parsedItems);

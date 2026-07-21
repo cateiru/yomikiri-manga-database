@@ -4,6 +4,7 @@ interface Source {
   key: string;
   name: string;
   listUrl: string;
+  siteUrl: string;
   parser: string;
   enabled: boolean;
   favicon: string;

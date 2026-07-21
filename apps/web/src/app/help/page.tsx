@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { HelpIllustration } from "@/components/HelpIllustration";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,10 @@ export default function HelpPage() {
       <h1 className={styles.heading}>このサイトの使い方</h1>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>読み切りを探す</h2>
+        <div className={styles.sectionHeader}>
+          <HelpIllustration variant="browse" />
+          <h2 className={styles.heading}>読み切りを探す</h2>
+        </div>
         <p>
           トップページには、各漫画配信サービスに掲載されている読み切り作品が新着順に並びます。
           気になる作品のカードをクリックすると、掲載元のページが別タブで開きます。
@@ -24,7 +28,10 @@ export default function HelpPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>ジャンルで絞り込む</h2>
+        <div className={styles.sectionHeader}>
+          <HelpIllustration variant="filter" />
+          <h2 className={styles.heading}>ジャンルで絞り込む</h2>
+        </div>
         <p>
           一覧の上部にあるジャンルタグを選択すると、そのジャンルの作品だけを表示できます。
           複数選択すると、選んだいずれかのジャンルに該当する作品が表示されます。
@@ -32,7 +39,10 @@ export default function HelpPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>読んだ作品を記録する</h2>
+        <div className={styles.sectionHeader}>
+          <HelpIllustration variant="read" />
+          <h2 className={styles.heading}>読んだ作品を記録する</h2>
+        </div>
         <p>
           作品を開いてしばらくすると、その作品は「既読」として記録され、
           一覧上でカードのサムネイルが薄く表示されるようになります。
@@ -45,7 +55,10 @@ export default function HelpPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>お気に入り</h2>
+        <div className={styles.sectionHeader}>
+          <HelpIllustration variant="favorite" />
+          <h2 className={styles.heading}>お気に入り</h2>
+        </div>
         <p>
           カード右上の星アイコンをクリックすると、その作品を
           <Link href="/favorites">お気に入り</Link>
@@ -55,7 +68,10 @@ export default function HelpPage() {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.heading}>その他</h2>
+        <div className={styles.sectionHeader}>
+          <HelpIllustration variant="about" />
+          <h2 className={styles.heading}>その他</h2>
+        </div>
         <p>
           サイトの目的や作品情報の取得元については
           <Link href="/about">このサイトについて</Link>

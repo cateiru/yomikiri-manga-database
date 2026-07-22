@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://yomikiri-manga.com"),
   title,
   description,
+  alternates: {
+    types: {
+      "application/rss+xml": "/rss.xml",
+    },
+  },
   openGraph: {
     title,
     description,

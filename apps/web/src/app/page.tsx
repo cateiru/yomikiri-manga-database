@@ -1,7 +1,7 @@
 import { GenreFilter } from "@/components/GenreFilter";
 import { OneshotsGrid } from "@/components/OneshotsGrid";
 import { getDb } from "@/lib/db";
-import { listGenres } from "@/lib/genres";
+import { listGenres, normalizeGenreParam } from "@/lib/genres";
 import { getOneshotsPage, HELP_CARD_COLUMN_SPAN, ONESHOTS_PAGE_SIZE } from "@/lib/oneshots";
 import styles from "./page.module.css";
 
@@ -9,13 +9,6 @@ export const dynamic = "force-dynamic";
 
 interface TopPageProps {
   searchParams: Promise<{ genre?: string | string[] }>;
-}
-
-function normalizeGenreParam(value: string | string[] | undefined): string[] {
-  if (!value) {
-    return [];
-  }
-  return Array.isArray(value) ? value : [value];
 }
 
 export default async function TopPage({ searchParams }: TopPageProps) {

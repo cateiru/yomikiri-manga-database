@@ -11,6 +11,7 @@ export function Footer() {
           © {year} <a href="https://cateiru.com">cateiru</a>
         </p>
         <nav className={styles.nav}>
+          <Link href="/rss.xml">RSS</Link>
           <Link href="/privacy">プライバシーポリシー</Link>
         </nav>
       </div>

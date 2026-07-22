@@ -5,7 +5,7 @@
 
 .inner {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
   max-width: 1200px;
@@ -14,9 +14,17 @@
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-xl);
   font-weight: 700;
   text-decoration: none;
+}
+
+.logoIcon {
+  width: 28px;
+  height: 28px;
 }
 
 .count {

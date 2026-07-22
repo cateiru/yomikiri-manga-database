@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   // トップページは force-dynamic のため Next.js の既定値は
   // `private, no-cache, no-store, max-age=0, must-revalidate` になるが、
   // CDN/ブラウザでキャッシュしつつ毎回再検証させたいので明示的に上書きする
+  // （s-maxage=60 は CDN 側の共有キャッシュ用。ブラウザは max-age=0 のため毎回再検証する）
   async headers() {
     return [
       {
@@ -24,7 +25,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=0, must-revalidate",
+            value: "public, max-age=0, s-maxage=60, must-revalidate",
           },
         ],
       },

@@ -60,9 +60,8 @@ export default function HelpPage() {
           <h2 className={styles.heading}>お気に入り</h2>
         </div>
         <p>
-          カード右上の星アイコンをクリックすると、その作品を
-          <Link href="/favorites">お気に入り</Link>
-          に登録できます。登録した作品はお気に入りページからいつでも確認できます。
+          カード右上の星アイコンをクリックすると、その作品をお気に入りに登録できます。
+          登録した作品は<Link href="/favorites">お気に入りページ</Link>からいつでも確認できます。
           お気に入りの記録もこの端末のブラウザ内にのみ保存されます。
         </p>
       </section>

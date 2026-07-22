@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/Footer";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Header } from "@/components/Header";
 import { getOneshotsCount } from "@/lib/oneshots";
 import "./globals.css";
@@ -18,6 +19,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="ja">
       <body>
+        <GoogleAnalytics />
         <Header oneshotsCount={oneshotsCount} />
         {children}
         <Footer />

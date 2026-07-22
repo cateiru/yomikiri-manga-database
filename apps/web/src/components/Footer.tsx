@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./Footer.module.css";
 
 export function Footer() {
@@ -9,6 +10,9 @@ export function Footer() {
         <p>
           © {year} <a href="https://cateiru.com">cateiru</a>
         </p>
+        <nav className={styles.nav}>
+          <Link href="/privacy">プライバシーポリシー</Link>
+        </nav>
       </div>
     </footer>
   );

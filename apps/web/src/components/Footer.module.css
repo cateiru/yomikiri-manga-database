@@ -31,3 +31,8 @@
     text-decoration: underline;
   }
 }
+
+.nav {
+  display: flex;
+  gap: var(--space-4);
+}

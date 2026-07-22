@@ -30,12 +30,14 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-3);
-  background: var(--color-ink);
-  color: var(--color-bg);
+  background: var(--color-ink-5);
+  color: var(--color-ink);
   border-bottom: var(--border-width) solid var(--color-ink);
-  text-align: center;
-  font-size: var(--text-md);
-  font-weight: 700;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
 }
 
 .body {

@@ -5,7 +5,11 @@ export function HelpCard() {
   return (
     <Link href="/help" className={styles.card}>
       <div className={styles.imageArea}>
-        <span>このサイトの使い方</span>
+        <svg className={styles.icon} viewBox="0 0 64 64" fill="none" role="img" aria-hidden="true">
+          <circle cx="32" cy="32" r="24" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M32 28v16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="32" cy="20" r="2.5" fill="currentColor" />
+        </svg>
       </div>
       <div className={styles.body}>
         <h3 className={styles.title}>はじめての方はこちら</h3>

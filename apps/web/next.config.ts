@@ -14,6 +14,22 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // トップページは force-dynamic のため Next.js の既定値は
+  // `private, no-cache, no-store, max-age=0, must-revalidate` になるが、
+  // CDN/ブラウザでキャッシュしつつ毎回再検証させたいので明示的に上書きする
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 initOpenNextCloudflareForDev();

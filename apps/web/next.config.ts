@@ -14,22 +14,22 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // トップページは force-dynamic のため Next.js の既定値は
+  // 以下のページは force-dynamic のため Next.js の既定値は
   // `private, no-cache, no-store, max-age=0, must-revalidate` になるが、
+  // いずれもユーザー固有の情報を含まない（お気に入り等は localStorage 管理）ため
   // CDN/ブラウザでキャッシュしつつ毎回再検証させたいので明示的に上書きする
   // （s-maxage=60 は CDN 側の共有キャッシュ用。ブラウザは max-age=0 のため毎回再検証する）
   async headers() {
-    return [
-      {
-        source: "/",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=0, s-maxage=60, must-revalidate",
-          },
-        ],
-      },
-    ];
+    const publiclyCacheablePaths = ["/", "/about", "/help", "/favorites"];
+    return publiclyCacheablePaths.map((source) => ({
+      source,
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=0, s-maxage=60, must-revalidate",
+        },
+      ],
+    }));
   },
 };
 

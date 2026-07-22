@@ -9,10 +9,19 @@ import {
 } from "../db/upsert.js";
 import { log } from "../logger.js";
 import { extractViewerDetail } from "../parsers/gigaviewer/viewerDetail.js";
-import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
+import { fetchHtml, HttpError, USER_AGENT } from "./fetchHtml.js";
 import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
 const REQUEST_INTERVAL_MS = 1000;
+
+/**
+ * ビューワーページが恒久的に取得不能であることを示す HTTP ステータス。
+ * リトライしても解決しないため、404/410 の場合はタイトル抽出失敗時と同様に
+ * detailsFetchedAt を更新して無限リトライを防ぐ
+ */
+function isPermanentHttpError(status: number): boolean {
+  return status === 404 || status === 410;
+}
 
 export interface SourceDetailResult {
   sourceKey: string;
@@ -126,8 +135,27 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
         });
       }
     } catch (error) {
-      // ネットワーク/HTTP エラー・robots 拒否時は detailsFetchedAt を更新せず、
-      // 次回バッチでのリトライ対象として残す
+      if (error instanceof HttpError && isPermanentHttpError(error.status)) {
+        // 404/410 はページが恒久的に消滅したことを意味し、リトライしても解決しないため、
+        // タイトル抽出失敗時と同様に取得試行済みとして記録し無限リトライを防ぐ。
+        // これは「想定内・処理済みのエラー」であり、result.error には積まない
+        // （バッチ全体の exitCode には影響させない。apps/batch/src/index.ts 参照）
+        await markDetailsFetchFailed(db, item.id);
+        result.failed += 1;
+        log(
+          "warn",
+          "ビューワーページが見つかりませんでした（404/410）。リトライ対象から除外します",
+          {
+            sourceKey,
+            viewerUrl: item.viewerUrl,
+            status: error.status,
+          },
+        );
+        continue;
+      }
+
+      // 上記以外（ネットワークエラー・5xx・robots 拒否等）は一時的なエラーとみなし、
+      // detailsFetchedAt を更新せず次回バッチでのリトライ対象として残す
       result.error = error instanceof Error ? error.message : String(error);
       log("error", "詳細取得に失敗しました", {
         sourceKey,

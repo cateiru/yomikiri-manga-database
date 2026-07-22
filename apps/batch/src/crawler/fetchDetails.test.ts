@@ -4,6 +4,7 @@ import type { Source } from "../config/sources.js";
 import * as upsert from "../db/upsert.js";
 import { fetchDetails } from "./fetchDetails.js";
 import * as fetchHtmlModule from "./fetchHtml.js";
+import { HttpError } from "./fetchHtml.js";
 import * as robotsModule from "./robots.js";
 
 function buildSource(key: string): Source {
@@ -69,5 +70,69 @@ describe("fetchDetails のレート制限", () => {
     expect(callTimestamps).toHaveLength(2);
     // 別ソースへの 1 件ずつのアクセスなので、待機なしでほぼ即座に終わるはず
     expect(elapsed).toBeLessThan(1000);
+  });
+});
+
+describe("fetchDetails の HTTP エラーハンドリング", () => {
+  it("404 の場合は detailsFetchedAt を更新（無限リトライ防止）し、result.error には積まない", async () => {
+    vi.spyOn(upsert, "getUnfetchedOneshots").mockResolvedValue([
+      { id: 1, sourceKey: "source-a", viewerUrl: "https://source-a.example.com/episode/1" },
+    ]);
+    const markDetailsFetchFailed = vi
+      .spyOn(upsert, "markDetailsFetchFailed")
+      .mockResolvedValue(undefined);
+    vi.spyOn(robotsModule, "fetchRobotsRules").mockResolvedValue({ isAllowed: () => true });
+    vi.spyOn(fetchHtmlModule, "fetchHtml").mockRejectedValue(new HttpError(404, "Not Found"));
+
+    const results = await fetchDetails({} as Db, [buildSource("source-a")]);
+
+    expect(markDetailsFetchFailed).toHaveBeenCalledWith({}, 1);
+    expect(results).toEqual([
+      { sourceKey: "source-a", attempted: 1, fetched: 0, failed: 1, error: null },
+    ]);
+  });
+
+  it("410 の場合も 404 と同様に恒久的なエラーとして扱う", async () => {
+    vi.spyOn(upsert, "getUnfetchedOneshots").mockResolvedValue([
+      { id: 1, sourceKey: "source-a", viewerUrl: "https://source-a.example.com/episode/1" },
+    ]);
+    const markDetailsFetchFailed = vi
+      .spyOn(upsert, "markDetailsFetchFailed")
+      .mockResolvedValue(undefined);
+    vi.spyOn(robotsModule, "fetchRobotsRules").mockResolvedValue({ isAllowed: () => true });
+    vi.spyOn(fetchHtmlModule, "fetchHtml").mockRejectedValue(new HttpError(410, "Gone"));
+
+    const results = await fetchDetails({} as Db, [buildSource("source-a")]);
+
+    expect(markDetailsFetchFailed).toHaveBeenCalledWith({}, 1);
+    expect(results).toEqual([
+      { sourceKey: "source-a", attempted: 1, fetched: 0, failed: 1, error: null },
+    ]);
+  });
+
+  it("5xx やネットワークエラーの場合は detailsFetchedAt を更新せず、result.error に記録してリトライ対象として残す", async () => {
+    vi.spyOn(upsert, "getUnfetchedOneshots").mockResolvedValue([
+      { id: 1, sourceKey: "source-a", viewerUrl: "https://source-a.example.com/episode/1" },
+    ]);
+    const markDetailsFetchFailed = vi
+      .spyOn(upsert, "markDetailsFetchFailed")
+      .mockResolvedValue(undefined);
+    vi.spyOn(robotsModule, "fetchRobotsRules").mockResolvedValue({ isAllowed: () => true });
+    vi.spyOn(fetchHtmlModule, "fetchHtml").mockRejectedValue(
+      new HttpError(503, "Service Unavailable"),
+    );
+
+    const results = await fetchDetails({} as Db, [buildSource("source-a")]);
+
+    expect(markDetailsFetchFailed).not.toHaveBeenCalled();
+    expect(results).toEqual([
+      {
+        sourceKey: "source-a",
+        attempted: 1,
+        fetched: 0,
+        failed: 0,
+        error: "HTTP 503 Service Unavailable",
+      },
+    ]);
   });
 });

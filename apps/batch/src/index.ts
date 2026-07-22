@@ -25,6 +25,13 @@ async function main() {
   const detailResults = await fetchDetails(db, sources);
   log("info", "詳細取得バッチが完了しました", { results: detailResults });
 
+  // result.error は「ソース単位で見た一時的・想定外のエラー」（robots 拒否、
+  // ネットワークエラー、5xx 等）が発生した場合にのみセットされる。
+  // 404/410 のような「恒久的に取得できないと分かっている個別 URL のエラー」は
+  // fetchDetails 内で detailsFetchedAt を更新した上で握りつぶし、result.error には
+  // 積まれない（次回以降キューに残らないため、放置しても batch は "failed" のまま
+  // にはならない）。そのため、ここでの exitCode = 1 は
+  // 「一覧収集自体の失敗」または「詳細取得中の一時的なエラー」のみを表す
   const hasError =
     collectResults.some((result) => result.error !== null) ||
     detailResults.some((result) => result.error !== null);

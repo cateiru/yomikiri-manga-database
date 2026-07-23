@@ -79,14 +79,22 @@ Web の一覧表示は Server Component から直接 DB を参照する設計で
 - リクエスト間隔はソースごとに 1 リクエスト/秒以上空ける（`REQUEST_INTERVAL_MS`）
 - 取得するのは HTML のみ（漫画本体の画像データは取得しない）
 
+### パーサー種別のディスパッチ（`apps/batch/src/parsers/index.ts`）
+
+`parser` 種別は `gigaviewer` と `magapoke` の 2 種類（`sources.schema.json` の `enum` で定義）。`collectUrls.ts`/`fetchDetails.ts` は `source.parser` を見ずに `parsers/index.ts` の `getParser` / `extractViewerDetail` を経由して各パーサー実装にディスパッチする。`cleanText` / `toAbsoluteUrl` / `buildUrlItem` は `parsers/shared.ts` にパーサー横断の共通ユーティリティとして置く（`gigaviewer/common.ts` はこれらを re-export しつつ GigaViewer 固有の `parseJapaneseDate` を保持）。新しい非 GigaViewer サイトを追加する場合は `parsers/<parser-key>/` を新設し、`parsers/index.ts` の `getParser`/`extractViewerDetail` の分岐に追加する。
+
 ### GigaViewer パーサーの構造（`apps/batch/src/parsers/gigaviewer/`）
 
-`parser` 種別としては `gigaviewer` の 1 種類のみだが、一覧ページの HTML 構造は掲載元ごとに異なるため、**ソースごとに個別の抽出ロジック**が必要。新しいソースを追加する際のパターン:
+GigaViewer 系サイトは一覧ページの HTML 構造が掲載元ごとに異なるため、**ソースごとに個別の抽出ロジック**が必要。新しい GigaViewer 系ソースを追加する際のパターン:
 
-1. `sources/<source-key>.ts` に `extract($: CheerioAPI, source: Source): ParsedOneshotUrl[]` を実装（`common.ts` の `buildUrlItem` でアイテム構築）
+1. `sources/<source-key>.ts` に `extract($: CheerioAPI, source: Source): ParsedOneshotUrl[]` を実装（`shared.ts` の `buildUrlItem` でアイテム構築）
 2. `index.ts` の `registry` に `source.key → extract` を登録（未登録の `source.key` は `assertSupportedSources` でエラーになる）
 3. 対応するテスト（`sources/<source-key>.test.ts`）と fixture HTML（`apps/batch/test/fixtures/<source-key>.html`）を追加
 4. ビューワーページ側の詳細抽出は GigaViewer 全サービス共通（`viewerDetail.ts`）のため個別実装不要
+
+### マガポケパーサーの構造（`apps/batch/src/parsers/magapoke/`）
+
+マガポケ（`pocket.shonenmagazine.com`）は GigaViewer 系ではなく独自の Nuxt (SSR) サイト。`index.ts` が一覧ページ（`/search/genre/10`＝読切ジャンル、ページングなしで全件 SSR）から `li.c-search-items__item` 内の「はじめから読む」リンク（`a.c-search-item__button--start`）のみを viewer URL として抽出する（「最新話を読む」は複数話にまたがる作品では別エピソードを指すため使わない）。`viewerDetail.ts` はビューワーページから `.p-episode__comic-ttl` 等でタイトル・著者・サムネイル・掲載日を抽出するが、掲載日表記が `YYYY/MM/DD`（GigaViewer は `年月日`）のため独自の日付パーサーを持つ。
 
 ### `sources.json`（クロール対象サービス定義）
 

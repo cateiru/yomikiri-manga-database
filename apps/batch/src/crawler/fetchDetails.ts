@@ -8,7 +8,7 @@ import {
   updateOneshotDetail,
 } from "../db/upsert.js";
 import { log } from "../logger.js";
-import { extractViewerDetail } from "../parsers/gigaviewer/viewerDetail.js";
+import { extractViewerDetail } from "../parsers/index.js";
 import { fetchHtml, HttpError, USER_AGENT } from "./fetchHtml.js";
 import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
@@ -114,7 +114,7 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
       const html = await fetchHtml(item.viewerUrl);
       lastAccessBySource.set(sourceKey, Date.now());
 
-      const detail = extractViewerDetail(cheerio.load(html), item.viewerUrl);
+      const detail = extractViewerDetail(source, cheerio.load(html), item.viewerUrl);
       if (detail) {
         await updateOneshotDetail(db, item.id, detail);
         result.fetched += 1;

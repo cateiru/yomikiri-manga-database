@@ -43,6 +43,9 @@ const registry: Record<string, Extractor> = {
 
 export function assertSupportedSources(sources: Source[]): void {
   for (const source of sources) {
+    if (source.parser !== "gigaviewer") {
+      continue;
+    }
     if (!(source.key in registry)) {
       throw new Error(`未対応の source.key です: ${source.key}`);
     }

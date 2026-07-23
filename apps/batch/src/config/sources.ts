@@ -6,7 +6,7 @@ const sourceSchema = z.object({
   name: z.string().min(1),
   listUrls: z.array(z.string().url()).min(1),
   siteUrl: z.string().url(),
-  parser: z.enum(["gigaviewer"]),
+  parser: z.enum(["gigaviewer", "magapoke"]),
   enabled: z.boolean(),
   favicon: z.string(),
   fallbackSourceKey: z.string().min(1).optional(),

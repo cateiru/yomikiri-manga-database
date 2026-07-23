@@ -54,7 +54,7 @@
         },
         "parser": {
           "type": "string",
-          "enum": ["gigaviewer"],
+          "enum": ["gigaviewer", "magapoke"],
           "description": "使用するパーサー種別"
         },
         "enabled": {

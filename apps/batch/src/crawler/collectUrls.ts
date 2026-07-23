@@ -6,7 +6,7 @@ import {
   upsertOneshotUrls,
 } from "../db/upsert.js";
 import { log } from "../logger.js";
-import { assertSupportedSources, gigaviewerParser } from "../parsers/gigaviewer/index.js";
+import { assertSupportedSources, getParser } from "../parsers/index.js";
 import type { ParsedOneshotUrl } from "../parsers/types.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
 import { fetchRobotsRules } from "./robots.js";
@@ -65,7 +65,7 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
         }
 
         const html = await fetchHtml(listUrl);
-        parsedItems.push(...gigaviewerParser.parse(html, source));
+        parsedItems.push(...getParser(source).parse(html, source));
 
         if (j < source.listUrls.length - 1) {
           await sleep(REQUEST_INTERVAL_MS);

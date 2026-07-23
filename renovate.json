@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "labels": ["dependencies"],
+  "postUpdateOptions": ["pnpmDedupe"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "packageRules": [
+    {
+      "groupName": "Node.js",
+      "matchDatasources": ["node-version", "docker"],
+      "matchPackageNames": ["node"]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "Next.js / React",
+      "matchPackageNames": ["next", "react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    {
+      "groupName": "Cloudflare / OpenNext",
+      "matchPackageNames": ["wrangler", "@opennextjs/cloudflare"]
+    },
+    {
+      "groupName": "Drizzle ORM",
+      "matchPackageNames": ["drizzle-orm", "drizzle-kit"]
+    },
+    {
+      "groupName": "Biome",
+      "matchPackageNames": ["@biomejs/biome"]
+    }
+  ]
+}

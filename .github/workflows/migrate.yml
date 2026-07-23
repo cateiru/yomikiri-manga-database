@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  migrate:
+  check-changes:
     # main への push で CI が成功した場合のみ実行する。
     # workflow_run は fork リポジトリの CI 完了でもトリガーされ得るため、
     # event 種別と head_repository の一致を明示的に確認し、secrets が
@@ -23,6 +23,28 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - id: check
+        run: |
+          if git diff --quiet HEAD^ HEAD -- packages/db; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  migrate:
+    needs: check-changes
+    # check-changes がスキップされた場合は outputs.changed が空になり、
+    # 'true' と一致しないため migrate も自動的にスキップされる。
+    if: needs.check-changes.outputs.changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production

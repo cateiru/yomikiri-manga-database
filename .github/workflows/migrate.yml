@@ -1,0 +1,45 @@
+name: Migrate Database
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    # main への push で CI が成功した場合のみ実行する。
+    # workflow_run は fork リポジトリの CI 完了でもトリガーされ得るため、
+    # event 種別と head_repository の一致を明示的に確認し、secrets が
+    # 意図しないコード（フォークからの PR 等）に渡らないようにする。
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @yomikiri/db migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

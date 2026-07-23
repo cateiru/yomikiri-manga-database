@@ -1,0 +1,45 @@
+# otelcol-mackerel（MDOT Collector）のログ収集パイプライン定義。
+# VPS 上の /etc/otelcol-mackerel/config.yaml にコピーして使う
+# （docs/plans/006_デプロイ・運用.md のセットアップ手順を参照）。
+#
+# MACKEREL_APIKEY 等の秘匿情報はここには書かない
+# （/etc/otelcol-mackerel/otelcol-mackerel.conf 側で管理する）。
+#
+# 導入は2段階で行う。まずはこのファイルのまま（transform なし）で
+# 「ログが届くこと」「yomikiri-batch.service 以外が混入していないこと」を
+# 確認してから、下記コメントの transform ブロックを追加して
+# JSON パース（level/message 等のフィールド展開）を有効化すること。
+
+receivers:
+  journald:
+    # yomikiri-batch.service のログのみに限定する（コスト事故防止の要）。
+    # 誤って外すと sshd / docker / mackerel-agent 自身等 VPS 全体の journal を
+    # 取り込んでしまい、無料枠（月1GB）を容易に超過し得る。
+    units:
+      - yomikiri-batch.service
+    start_at: end # 導入時点までの過去ログを一括取り込みしない
+
+processors:
+  batch: {}
+  # 段階2で追加する transform processor（コメントアウトを外して使う）:
+  #
+  # transform:
+  #   error_mode: ignore # JSON以外の行が来てもパイプラインを止めない
+  #   log_statements:
+  #     - context: log
+  #       statements:
+  #         - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
+  #
+  # service.pipelines.logs.processors も [transform, batch] に変更すること。
+
+exporters:
+  mackerel_otlp: {}
+  # APIキーは /etc/otelcol-mackerel/otelcol-mackerel.conf の
+  # MACKEREL_APIKEY 環境変数から exporter が読む。
+
+service:
+  pipelines:
+    logs:
+      receivers: [journald]
+      processors: [batch]
+      exporters: [mackerel_otlp]

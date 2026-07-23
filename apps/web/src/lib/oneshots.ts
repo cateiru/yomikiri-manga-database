@@ -17,7 +17,11 @@ import {
 } from "drizzle-orm";
 import { getDb } from "./db";
 
-const TOP_GENRE_COUNT = 3;
+// 最多得票ジャンルの得票数に対してこの割合以上の得票があるジャンルのみバッジ表示する。
+// 固定件数（旧: 上位3件）ではなく得票の僅差/大差に応じて表示件数が変動するようにするための閾値
+const GENRE_BADGE_VOTE_RATIO = 0.5;
+// 極端な僅差（同数タイ多発）でバッジが際限なく並ばないための安全弁
+const MAX_GENRE_BADGES = 6;
 export const ONESHOTS_PAGE_SIZE = 24;
 // ヘルプ導線カードがグリッドの2カラム分を占有するため、初回表示分はその分だけ作品数を減らす
 export const HELP_CARD_COLUMN_SPAN = 2;
@@ -105,6 +109,21 @@ interface OneshotRow {
   firstSeenAt: Date;
 }
 
+/** 最多得票ジャンルの得票数を基準に、僅差のジャンルのみを表示対象として選ぶ */
+export function selectGenreBadges(genreBadges: OneshotGenreBadge[]): OneshotGenreBadge[] {
+  if (genreBadges.length === 0) {
+    return [];
+  }
+
+  const maxVotes = Math.max(...genreBadges.map((genre) => genre.votes));
+  const threshold = Math.ceil(maxVotes * GENRE_BADGE_VOTE_RATIO);
+
+  return genreBadges
+    .filter((genre) => genre.votes >= threshold)
+    .sort((a, b) => b.votes - a.votes || a.id - b.id)
+    .slice(0, MAX_GENRE_BADGES);
+}
+
 async function attachGenreBadges(db: Db, rows: OneshotRow[]): Promise<OneshotListItem[]> {
   const oneshotIds = rows.map((row) => row.id);
   const voteRows =
@@ -136,9 +155,7 @@ async function attachGenreBadges(db: Db, rows: OneshotRow[]): Promise<OneshotLis
   }
 
   return rows.map((row) => {
-    const topGenres = (votesByOneshot.get(row.id) ?? [])
-      .sort((a, b) => b.votes - a.votes || a.id - b.id)
-      .slice(0, TOP_GENRE_COUNT);
+    const topGenres = selectGenreBadges(votesByOneshot.get(row.id) ?? []);
 
     return {
       id: row.id,

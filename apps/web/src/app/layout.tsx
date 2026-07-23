@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { DebugBanner } from "@/components/DebugBanner";
 import { Footer } from "@/components/Footer";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Header } from "@/components/Header";
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="ja">
       <body>
+        <DebugBanner />
         <GoogleAnalytics />
         <Header oneshotsCount={oneshotsCount} />
         {children}

@@ -5,10 +5,6 @@
 # MACKEREL_APIKEY 等の秘匿情報はここには書かない
 # （/etc/otelcol-mackerel/otelcol-mackerel.conf 側で管理する）。
 #
-# 導入は2段階で行う。まずはこのファイルのまま（transform なし）で
-# 「ログが届くこと」「yomikiri-batch.service 以外が混入していないこと」を
-# 確認してから、下記コメントの transform ブロックを追加して
-# JSON パース（level/message 等のフィールド展開）を有効化すること。
 
 receivers:
   journald:
@@ -28,17 +24,27 @@ processors:
       - key: service.name
         value: "yomikiri-batch"
         action: upsert
+  # journald レシーバーは journalctl -o json の生JSON（MESSAGE/PRIORITY/_SYSTEMD_UNIT 等）を
+  # そのまま body に渡してくる。apps/batch/src/logger.ts が出力するJSONは、この outer JSON の
+  # MESSAGE フィールドの中にエスケープされた文字列としてネストされているため、
+  # 1回目の ParseJSON では outer（journald側）のフィールドしか取れない。
+  # そこで MESSAGE を取り出して body を差し替えたうえで、もう一度 ParseJSON して
+  # level/message 等を取り出す（二重デコード）。level を severity_text / severity_number
+  # にも反映させる（未設定だと Mackerel 側のログレベル表示が UNSPECIFIED のままになる）。
+  # apps/batch/src/logger.ts が出力するレベルは info/warn/error の3種類のみ。
+  transform:
+    error_mode: ignore # JSON以外の行が来てもパイプラインを止めない
+    log_statements:
+      - context: log
+        statements:
+          - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
+          - 'set(body, attributes["MESSAGE"]) where attributes["MESSAGE"] != nil'
+          - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
+          - 'set(severity_text, attributes["level"]) where attributes["level"] != nil'
+          - 'set(severity_number, SEVERITY_NUMBER_INFO) where severity_text == "info"'
+          - 'set(severity_number, SEVERITY_NUMBER_WARN) where severity_text == "warn"'
+          - 'set(severity_number, SEVERITY_NUMBER_ERROR) where severity_text == "error"'
   batch: {}
-  # 段階2で追加する transform processor（コメントアウトを外して使う）:
-  #
-  # transform:
-  #   error_mode: ignore # JSON以外の行が来てもパイプラインを止めない
-  #   log_statements:
-  #     - context: log
-  #       statements:
-  #         - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
-  #
-  # service.pipelines.logs.processors も [resource, transform, batch] に変更すること。
 
 exporters:
   mackerel_otlp: {}
@@ -49,5 +55,5 @@ service:
   pipelines:
     logs:
       receivers: [journald]
-      processors: [resource, batch]
+      processors: [resource, transform, batch]
       exporters: [mackerel_otlp]

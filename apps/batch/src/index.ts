@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { createDb } from "@yomikiri/db/client-node";
 import { loadEnabledSources } from "./config/sources.js";
 import { collectUrls } from "./crawler/collectUrls.js";
+import { deleteExpiredTransferCodes } from "./crawler/deleteExpiredTransferCodes.js";
 import { fetchDetails } from "./crawler/fetchDetails.js";
 import { log } from "./logger.js";
 
@@ -24,6 +25,10 @@ async function main() {
   // 2. キューにある詳細未取得のビューワー URL へアクセスし、詳細を取得する
   const detailResults = await fetchDetails(db, sources);
   log("info", "詳細取得バッチが完了しました", { results: detailResults });
+
+  // 3. 有効期限（24時間）を過ぎたデータ引き継ぎコードを物理削除する
+  const deletedTransferCodeCount = await deleteExpiredTransferCodes(db);
+  log("info", "引き継ぎコード削除バッチが完了しました", { deletedCount: deletedTransferCodeCount });
 
   // result.error は「ソース単位で見た一時的・想定外のエラー」（robots 拒否、
   // ネットワークエラー、5xx 等）が発生した場合にのみセットされる。

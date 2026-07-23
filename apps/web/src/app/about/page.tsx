@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClearHistoryButton } from "@/components/ClearHistoryButton";
+import { DataTransferButton } from "@/components/DataTransferButton";
 import { getLatestDataUpdatedAt } from "@/lib/oneshots";
 import { listSources } from "@/lib/sources";
 import styles from "./page.module.css";
@@ -67,6 +68,15 @@ export default async function AboutPage() {
           <a href="mailto:yomikiri-manga@cateiru.com">yomikiri-manga@cateiru.com</a>{" "}
           までご連絡ください。
         </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.heading}>データの引き継ぎ</h2>
+        <p>
+          既読・お気に入り・投票・スキップの記録は、通常この端末のブラウザ内にのみ保存されています。
+          以下のボタンから引き継ぎコードを発行し、別の端末でそのコードを入力すると、記録を移行できます。
+        </p>
+        <DataTransferButton />
       </section>
 
       <section className={styles.section}>

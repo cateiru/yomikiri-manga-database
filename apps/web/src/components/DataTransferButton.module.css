@@ -1,0 +1,25 @@
+.button {
+  height: 40px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  border: var(--border-width) solid var(--color-ink);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  margin-top: var(--space-3);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.button:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translate(-2px, -2px);
+}
+
+.button:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}

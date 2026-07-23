@@ -127,3 +127,54 @@ export function resetAllStoredState(): void {
     window.localStorage.removeItem(key);
   }
 }
+
+export interface TransferPayload {
+  anonymousUserId: string;
+  votedOneshotIds: number[];
+  skippedOneshotIds: number[];
+  readOneshotIds: number[];
+  favoriteOneshotIds: number[];
+}
+
+/** データ引き継ぎ機能でサーバーに預けるためにこの端末の状態を集約する */
+export function exportTransferState(): TransferPayload {
+  return {
+    anonymousUserId: getAnonymousUserId(),
+    votedOneshotIds: getVotedOneshotIds(),
+    skippedOneshotIds: getSkippedOneshotIds(),
+    readOneshotIds: getReadOneshotIds(),
+    favoriteOneshotIds: getFavoriteOneshotIds(),
+  };
+}
+
+function mergeIdLists(current: number[], incoming: number[]): number[] {
+  return [...new Set([...current, ...incoming])];
+}
+
+/**
+ * 引き継いだ状態をこの端末に反映する。
+ * overwrite は anonymousUserId ごと置き換えるため、サーバー側の投票履歴（genre_votes）も
+ * 引き継がれる。merge は ID 一覧を和集合でマージするのみで anonymousUserId は変えないため、
+ * 投票履歴はこの端末のものに留まる。
+ */
+export function importTransferState(payload: TransferPayload, mode: "overwrite" | "merge"): void {
+  if (mode === "overwrite") {
+    window.localStorage.setItem(ANONYMOUS_USER_ID_KEY, payload.anonymousUserId);
+    writeJson(VOTED_ONESHOT_IDS_KEY, payload.votedOneshotIds);
+    writeJson(SKIPPED_ONESHOT_IDS_KEY, payload.skippedOneshotIds);
+    writeJson(READ_ONESHOT_IDS_KEY, payload.readOneshotIds);
+    writeJson(FAVORITE_ONESHOT_IDS_KEY, payload.favoriteOneshotIds);
+    return;
+  }
+
+  writeJson(VOTED_ONESHOT_IDS_KEY, mergeIdLists(getVotedOneshotIds(), payload.votedOneshotIds));
+  writeJson(
+    SKIPPED_ONESHOT_IDS_KEY,
+    mergeIdLists(getSkippedOneshotIds(), payload.skippedOneshotIds),
+  );
+  writeJson(READ_ONESHOT_IDS_KEY, mergeIdLists(getReadOneshotIds(), payload.readOneshotIds));
+  writeJson(
+    FAVORITE_ONESHOT_IDS_KEY,
+    mergeIdLists(getFavoriteOneshotIds(), payload.favoriteOneshotIds),
+  );
+}

@@ -162,6 +162,15 @@
       "enabled": true,
       "favicon": "/favicons/comicbunch-kai.png",
       "fallbackSourceKey": "kuragebunch"
+    },
+    {
+      "key": "magapoke",
+      "name": "マガポケ",
+      "listUrls": ["https://pocket.shonenmagazine.com/search/genre/10"],
+      "siteUrl": "https://pocket.shonenmagazine.com/",
+      "parser": "magapoke",
+      "enabled": true,
+      "favicon": "/favicons/magapoke.png"
     }
   ]
 }

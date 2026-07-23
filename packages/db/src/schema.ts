@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   serial,
   text,
@@ -60,3 +61,11 @@ export const genreVotes = pgTable(
     index("genre_votes_oneshot_id_idx").on(table.oneshotId),
   ],
 );
+
+export const transferCodes = pgTable("transfer_codes", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  payload: jsonb("payload").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});

@@ -20,6 +20,14 @@ receivers:
     start_at: end # 導入時点までの過去ログを一括取り込みしない
 
 processors:
+  # Mackerel はログを service.name（+ service.namespace）リソース属性で識別するため、
+  # journald レシーバーが自動設定しない service.name をここで明示的に付与する。
+  # 未設定のままだと Mackerel 側の「サービス名」表示が unknown_service になる。
+  resource:
+    attributes:
+      - key: service.name
+        value: "yomikiri-batch"
+        action: upsert
   batch: {}
   # 段階2で追加する transform processor（コメントアウトを外して使う）:
   #
@@ -30,7 +38,7 @@ processors:
   #       statements:
   #         - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
   #
-  # service.pipelines.logs.processors も [transform, batch] に変更すること。
+  # service.pipelines.logs.processors も [resource, transform, batch] に変更すること。
 
 exporters:
   mackerel_otlp: {}
@@ -41,5 +49,5 @@ service:
   pipelines:
     logs:
       receivers: [journald]
-      processors: [batch]
+      processors: [resource, batch]
       exporters: [mackerel_otlp]

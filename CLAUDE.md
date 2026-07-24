@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 概要
 
-各漫画配信サービス（GigaViewer 系）に掲載されている「読み切り漫画」を横断的に収集・一覧表示する Web サービス。仕様は `docs/001_plan.md`、UI デザイン指針は `docs/002_design.md`、機能ごとの実装計画は `docs/plans/` を参照。漫画本体は配信せず、外部ビューワーページへ遷移させ、読了後にジャンル投票を集める。
+各漫画配信サービス（GigaViewer 系を中心に、マガポケ・カドコミ・コミチ等の独自サイトも含む）に掲載されている「読み切り漫画」を横断的に収集・一覧表示する Web サービス。仕様は `docs/001_plan.md`、UI デザイン指針は `docs/002_design.md`、機能ごとの実装計画は `docs/plans/` を参照。漫画本体は配信せず、外部ビューワーページへ遷移させ、読了後にジャンル投票を集める。
 
 ## リポジトリ構成（pnpm workspace）
 
@@ -65,8 +65,8 @@ Web の一覧表示は Server Component から直接 DB を参照する設計で
 
 バッチは「URL 収集」→「詳細取得」の順に**必ず両方**実行する。URL 収集を毎回全ソース完走させてから詳細取得（キュー処理）を行うことで、詳細取得に時間がかかっても新規作品の発見自体は毎回滞りなく行われる（1 ソースだけ処理が偏り続けることを防ぐ）。
 
-1. **URL 収集**（`crawler/collectUrls.ts`）: 各ソースの `listUrls` を GET し、`parsers/gigaviewer` でビューワー URL を抽出、`(source_key, viewer_url)` をキーに `oneshots` へ upsert。新規行は `title` 等が `null` のまま登録され、詳細取得バッチのキュー対象になる。既存行は `last_seen_at` のみ更新（詳細情報は上書きしない）
-2. **詳細取得**（`crawler/fetchDetails.ts`）: `details_fetched_at IS NULL` の行をキューとし、**source ごとにグルーピングしてラウンドロビンで 1 件ずつ処理**（1 ソースの滞留が他ソースの処理を遅らせないため）。GigaViewer 共通のビューワー DOM 構造（`parsers/gigaviewer/viewerDetail.ts`）からタイトル・著者・サムネイル・掲載日を抽出
+1. **URL 収集**（`crawler/collectUrls.ts`）: パーサーが `collectUrls` を実装していればそれを使い、実装していなければ各ソースの `listUrls` を順に GET して `parser.parse` に渡す（`collectUrlsFromListUrls`）。抽出したビューワー URL は `(source_key, viewer_url)` をキーに `oneshots` へ upsert。新規行は `title` 等が `null` のまま登録され、詳細取得バッチのキュー対象になる。既存行は `last_seen_at` のみ更新（詳細情報は上書きしない）
+2. **詳細取得**（`crawler/fetchDetails.ts`）: `details_fetched_at IS NULL` の行をキューとし、**source ごとにグルーピングしてラウンドロビンで 1 件ずつ処理**（1 ソースの滞留が他ソースの処理を遅らせないため）。`parsers/index.ts` の `extractViewerDetail` を経由し、パーサーごとのビューワー DOM 構造からタイトル・著者・サムネイル・掲載日を抽出
    - 抽出成功: 詳細情報 + `details_fetched_at` を更新
    - 抽出失敗（タイトル取得不可等）: `details_fetched_at` のみ更新し無限リトライを防ぐ
    - HTTP/ネットワークエラー: `details_fetched_at` を更新せず次回再試行
@@ -81,7 +81,14 @@ Web の一覧表示は Server Component から直接 DB を参照する設計で
 
 ### パーサー種別のディスパッチ（`apps/batch/src/parsers/index.ts`）
 
-`parser` 種別は `gigaviewer` と `magapoke` の 2 種類（`sources.schema.json` の `enum` で定義）。`collectUrls.ts`/`fetchDetails.ts` は `source.parser` を見ずに `parsers/index.ts` の `getParser` / `extractViewerDetail` を経由して各パーサー実装にディスパッチする。`cleanText` / `toAbsoluteUrl` / `buildUrlItem` は `parsers/shared.ts` にパーサー横断の共通ユーティリティとして置く（`gigaviewer/common.ts` はこれらを re-export しつつ GigaViewer 固有の `parseJapaneseDate` を保持）。新しい非 GigaViewer サイトを追加する場合は `parsers/<parser-key>/` を新設し、`parsers/index.ts` の `getParser`/`extractViewerDetail` の分岐に追加する。
+`parser` 種別は `gigaviewer` / `magapoke` / `comic-walker` / `comici` の 4 種類（`sources.schema.json` の `enum` で定義）。`collectUrls.ts`/`fetchDetails.ts` は `source.parser` を見ずに `parsers/index.ts` の `getParser` / `extractViewerDetail` を経由して各パーサー実装にディスパッチする。
+
+各パーサーは `Parser` インターフェース（`parsers/types.ts`）を実装する:
+
+- `parse(html, source)`: 必須。一覧ページ 1 枚分の同期抽出（`source.listUrls` をそのまま GET できるソース向け）
+- `collectUrls(source, deps)`: 任意。`listUrls` の単純 GET では表現できない収集ロジック（レーベル一覧・カテゴリ→シリーズ等の多段フェッチ、ページネーションの追跡）が必要なソース向けの非同期メソッド。実装があれば `collectUrls.ts` は `source.listUrls` のループの代わりにこちらを使う（`deps.fetchAllowedHtml` が robots.txt チェックとレート制限をまとめて行う）
+
+`cleanText` / `toAbsoluteUrl` / `buildUrlItem` は `parsers/shared.ts` にパーサー横断の共通ユーティリティとして置く（`gigaviewer/common.ts` はこれらを re-export しつつ GigaViewer 固有の `parseJapaneseDate` を保持）。新しい非 GigaViewer サイトを追加する場合は `parsers/<parser-key>/` を新設し、`sources.schema.json` の `parser` enum と `parsers/index.ts` の `getParser`/`extractViewerDetail` の分岐に追加する。
 
 ### GigaViewer パーサーの構造（`apps/batch/src/parsers/gigaviewer/`）
 
@@ -95,6 +102,14 @@ GigaViewer 系サイトは一覧ページの HTML 構造が掲載元ごとに異
 ### マガポケパーサーの構造（`apps/batch/src/parsers/magapoke/`）
 
 マガポケ（`pocket.shonenmagazine.com`）は GigaViewer 系ではなく独自の Nuxt (SSR) サイト。`index.ts` が一覧ページ（`/search/genre/10`＝読切ジャンル、ページングなしで全件 SSR）から `li.c-search-items__item` 内の「はじめから読む」リンク（`a.c-search-item__button--start`）のみを viewer URL として抽出する（「最新話を読む」は複数話にまたがる作品では別エピソードを指すため使わない）。`viewerDetail.ts` はビューワーページから `.p-episode__comic-ttl` 等でタイトル・著者・サムネイル・掲載日を抽出するが、掲載日表記が `YYYY/MM/DD`（GigaViewer は `年月日`）のため独自の日付パーサーを持つ。
+
+### カドコミパーサーの構造（`apps/batch/src/parsers/comic-walker/`）
+
+カドコミ（`comic-walker.com`）は `Parser.collectUrls` を実装する。レーベル一覧ページ（`/label`）から動的にレーベルキーを取得し、レーベルごとの読み切り一覧ページ（`/label/{key}/one-shot`）を `a[rel="next"]` のページネーションを訪問済み集合で管理しながら辿って収集する。1 レーベルの取得失敗が他レーベルの収集を止めないよう、ログのみ残して続行する。
+
+### コミチパーサーの構造（`apps/batch/src/parsers/comici/`）
+
+コミチ系サイト（`championcross` 等、`sources.json` に 28 サイト登録、いずれも `parser: "comici"`）も `Parser.collectUrls` を実装する。各サイトは「読み切りカテゴリ一覧（`/category/manga/oneShot/{n}`）→ シリーズページ（`/series/...`）→ 話一覧」という 2 段構成のため、カテゴリ一覧をページネーションしながらシリーズ URL を集めた後、各シリーズページへ追加フェッチして DOM 順で先頭の話（第 1 話）の URL を viewer URL として採用する（続編で複数話になった場合も常に第 1 話を採用）。1 シリーズの取得失敗が他シリーズの収集を止めないよう、ログのみ残して続行する。`sources.json` の `listUrls` はスキーマ上必須のため値は入っているが、実際の収集ロジックでは参照しない。
 
 ### `sources.json`（クロール対象サービス定義）
 

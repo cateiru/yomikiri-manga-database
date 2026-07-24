@@ -6,7 +6,8 @@
 一覧を grid 形式で表示する Web サービス。
 
 - 対象は GigaViewer 系漫画サービス（[はてな GigaViewer](https://hatena.co.jp/solutions/gigaviewer) を採用したサービス）のうち、
-  [コミックDAYS の読切一覧](https://comic-days.com/oneshot) のような読み切り一覧ページを持つサービス
+  [コミックDAYS の読切一覧](https://comic-days.com/oneshot) のような読み切り一覧ページを持つサービスを中心に、
+  マガポケ・カドコミ（comic-walker.com）・コミチ系サイトのような GigaViewer 非採用の独自サイトも対象に含む
 - 漫画本体は本サービスでは配信せず、各サービスのビューワーページへ外部遷移させる
 - 読了後に戻ってきたユーザーへ「この読み切りはどんなジャンルだったか」を質問し、
   投票を集計して各漫画にジャンルバッジとして表示する
@@ -42,7 +43,7 @@ flowchart LR
     end
 
     subgraph external[外部漫画サービス]
-        giga[GigaViewer 系サイト<br>読み切り一覧ページ]
+        giga[GigaViewer 系・独自サイト<br>読み切り一覧ページ]
         viewer[ビューワーページ]
     end
 
@@ -75,7 +76,9 @@ flowchart LR
 GigaViewer で共通化されているのはビューワー・履歴ページの機構のみで、
 トップページや作品一覧ページの HTML 構造は掲載元（出版社・レーベル）ごとに異なる。
 そのため `sources.json` の `parser` 種別は「GigaViewer 採用サービス」を示す
-`gigaviewer` の 1 種類のみだが、一覧ページの抽出ロジックはソースごとに実装する必要がある
+`gigaviewer` を筆頭に、GigaViewer 非採用の独自サイト向けに `magapoke` / `comic-walker` / `comici`
+を加えた 4 種類がある（`sources.schema.json` の `enum` で定義）が、一覧ページの抽出ロジックは
+いずれも `parser` 種別だけでは足りずソースごとに実装する必要がある
 （詳細は [003 バッチクローラー](./plans/003_バッチクローラー.md) を参照）。
 
 ```json
@@ -101,7 +104,7 @@ GigaViewer で共通化されているのはビューワー・履歴ページの
 | `name`               | string  | 表示用のサービス名                                                                       |
 | `listUrls`           | array   | 同じ `parser`・同じ `source.key` で解析する読み切り一覧ページ URL の配列（1 件以上）    |
 | `siteUrl`            | string  | サービスのトップページ URL。詳細取得バッチでの robots.txt 取得元（`/about` ページ等の紹介リンクにも使用）。一覧ページの robots.txt は `listUrls` の各 URL ごとに個別取得する |
-| `parser`             | string  | 使用するパーサー種別。当面は `gigaviewer` のみ                                           |
+| `parser`             | string  | 使用するパーサー種別。`gigaviewer` / `magapoke` / `comic-walker` / `comici` の 4 種類     |
 | `enabled`            | boolean | `false` にするとクロール対象から除外する                                                 |
 | `favicon`            | string  | `apps/web/public/favicons/` 以下に配置した favicon 画像への絶対パス。一覧カードに表示する |
 | `fallbackSourceKey`  | string（任意） | 姉妹サイト等で同一作品が重複掲載される場合に指定する。指定した source に既に同一パス（クエリ除く）の viewer URL が登録済みなら、このソースでの登録をスキップする |
@@ -281,8 +284,11 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 各サイトの読み切り一覧ページからビューワー URL を集め、`oneshots` へ登録する。
 
 1. `sources.json` を読み込み、`enabled: true` のソースを対象とする
-2. 各ソースの `listUrls` に列挙された URL それぞれに HTTP GET でアクセスする
-3. `parser` に対応するパーサー（`gigaviewer`）で HTML をパースし、ビューワー URL を抽出する
+2. `parser` に対応するパーサーが `collectUrls`（一覧ページの URL 自体を動的に発見する必要があるソース向けの
+   収集ロジック。レーベル一覧やページネーション、カテゴリ→シリーズ等の多段フェッチを内部で行う）を実装していれば
+   それを使い、実装していなければ（`gigaviewer` / `magapoke`）各ソースの `listUrls` に列挙された URL それぞれに
+   HTTP GET でアクセスする
+3. 取得した HTML を `parser` に対応するパーサーでパースし、ビューワー URL を抽出する
    （一覧ページの構造・連載作品との混在有無はソースごとに異なるため、
    対象要素の絞り込みは `source.key` 単位で実装する）
 4. `(source_key, viewer_url)` をキーに `oneshots` へ upsert する
@@ -294,13 +300,17 @@ Drizzle スキーマは `packages/db` に配置し、web / batch から共有す
 
 ### 8.3 詳細取得バッチ
 
-GigaViewer はビューワーページのデザインが全サービス共通であることを利用し、
-ビューワーページから直接タイトル・作者・サムネイル・掲載日を取得する。
+GigaViewer 系サイトはビューワーページのデザインが全サービス共通であることを利用し、
+ビューワーページから直接タイトル・作者・サムネイル・掲載日を取得する。GigaViewer 非採用の
+独自サイト（`magapoke` / `comic-walker` / `comici`）はそれぞれ独自のビューワー DOM 構造を
+持つため、`parser` 種別ごとに個別の抽出ロジックを実装する。
 
 1. `oneshots` から `details_fetched_at IS NULL`（詳細未取得）の行を取得し、キューとする
 2. キューを `source_key` ごとにグルーピングし、**ラウンドロビン**で 1 件ずつ処理する
    （1 ソースの滞留件数が多い場合でも、他ソースの処理が後回しにならないようにするため）
-3. 各ビューワー URL の HTML から次のセレクタで詳細を抽出する
+3. 各ビューワー URL の HTML から、`parser` 種別に対応する抽出ロジックで詳細を取得する。
+   GigaViewer 系は次のセレクタで抽出する（`magapoke` / `comic-walker` / `comici` は
+   それぞれ別セレクタ・別ロジックを持つ）
 
    | 項目       | セレクタ                   | 備考                                           |
    | ---------- | --------------------------- | ----------------------------------------------- |
@@ -487,5 +497,4 @@ GitHub Actions（`.github/workflows/ci.yml`）で Pull Request と main への p
 
 - ユーザー認証（データ引き継ぎは認証を伴わないコード方式で対応済み。「6.5 データ引き継ぎ」参照）
 - ジャンルに基づくレコメンド
-- GigaViewer 以外のサービスへの対応（パーサー種別の追加）
 - 読了数・投票数などの統計ダッシュボード

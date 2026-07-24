@@ -24,15 +24,7 @@ const nextConfig: NextConfig = {
   // 裏で再検証させることでオリジンの応答が遅い場合の体感待ち時間をなくす。
   // ブラウザは max-age=0 のため毎回再検証する
   async headers() {
-    const publiclyCacheablePaths = [
-      "/",
-      "/about",
-      "/help",
-      "/favorites",
-      "/privacy",
-      "/rss.xml",
-      "/status",
-    ];
+    const publiclyCacheablePaths = ["/", "/about", "/help", "/favorites", "/privacy", "/rss.xml"];
     return publiclyCacheablePaths.map((source) => ({
       source,
       headers: [

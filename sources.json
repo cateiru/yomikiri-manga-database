@@ -180,6 +180,15 @@
       "parser": "comic-walker",
       "enabled": true,
       "favicon": "/favicons/comic-walker.png"
+    },
+    {
+      "key": "ourfeel",
+      "name": "OUR FEEL",
+      "listUrls": ["https://ourfeel.jp/"],
+      "siteUrl": "https://ourfeel.jp/",
+      "parser": "gigaviewer",
+      "enabled": true,
+      "favicon": "/favicons/ourfeel.png"
     }
   ]
 }

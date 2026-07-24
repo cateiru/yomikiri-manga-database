@@ -15,6 +15,7 @@ import { extract as kuragebunch } from "./sources/kuragebunch.js";
 import { extract as magcomi } from "./sources/magcomi.js";
 import { extract as mangatimeSquare } from "./sources/mangatime-square.js";
 import { extract as morningTwo } from "./sources/morning-two.js";
+import { extract as ourfeel } from "./sources/ourfeel.js";
 import { extract as sundayWebry } from "./sources/sunday-webry.js";
 import { extract as tonarinoyj } from "./sources/tonarinoyj.js";
 import { extract as zenonPlus } from "./sources/zenon-plus.js";
@@ -39,6 +40,7 @@ const registry: Record<string, Extractor> = {
   "morning-two": morningTwo,
   getsumagakichi,
   "comicbunch-kai": comicbunchKai,
+  ourfeel,
 };
 
 export function assertSupportedSources(sources: Source[]): void {

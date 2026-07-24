@@ -7,9 +7,9 @@ import {
 } from "../db/upsert.js";
 import { log } from "../logger.js";
 import { assertSupportedSources, getParser } from "../parsers/index.js";
-import type { ParsedOneshotUrl } from "../parsers/types.js";
+import type { CollectUrlsDeps, ParsedOneshotUrl } from "../parsers/types.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
-import { fetchRobotsRules } from "./robots.js";
+import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
 const REQUEST_INTERVAL_MS = 1000;
 
@@ -50,27 +50,10 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
     };
 
     try {
-      const parsedItems: ParsedOneshotUrl[] = [];
-
-      for (let j = 0; j < source.listUrls.length; j++) {
-        const listUrl = source.listUrls[j];
-        if (!listUrl) {
-          continue;
-        }
-
-        const robots = await fetchRobotsRules(listUrl, USER_AGENT);
-        const path = new URL(listUrl).pathname;
-        if (!robots.isAllowed(path)) {
-          throw new Error(`robots.txt により ${listUrl} へのアクセスが拒否されています`);
-        }
-
-        const html = await fetchHtml(listUrl);
-        parsedItems.push(...getParser(source).parse(html, source));
-
-        if (j < source.listUrls.length - 1) {
-          await sleep(REQUEST_INTERVAL_MS);
-        }
-      }
+      const parser = getParser(source);
+      const parsedItems: ParsedOneshotUrl[] = parser.collectUrls
+        ? await parser.collectUrls(source, createCollectUrlsDeps(source))
+        : await collectUrlsFromListUrls(source, parser.parse);
 
       result.fetched = parsedItems.length;
 
@@ -100,6 +83,72 @@ export async function collectUrls(db: Db, sources: Source[]): Promise<SourceResu
   }
 
   return results;
+}
+
+/**
+ * source.listUrls を順にフェッチして parser.parse に渡す、従来どおりの収集方法。
+ * parser.collectUrls を実装していないソース（gigaviewer / magapoke）で使う
+ */
+async function collectUrlsFromListUrls(
+  source: Source,
+  parse: (html: string, source: Source) => ParsedOneshotUrl[],
+): Promise<ParsedOneshotUrl[]> {
+  const parsedItems: ParsedOneshotUrl[] = [];
+
+  for (let j = 0; j < source.listUrls.length; j++) {
+    const listUrl = source.listUrls[j];
+    if (!listUrl) {
+      continue;
+    }
+
+    const robots = await fetchRobotsRules(listUrl, USER_AGENT);
+    const path = new URL(listUrl).pathname;
+    if (!robots.isAllowed(path)) {
+      throw new Error(`robots.txt により ${listUrl} へのアクセスが拒否されています`);
+    }
+
+    const html = await fetchHtml(listUrl);
+    parsedItems.push(...parse(html, source));
+
+    if (j < source.listUrls.length - 1) {
+      await sleep(REQUEST_INTERVAL_MS);
+    }
+  }
+
+  return parsedItems;
+}
+
+/**
+ * parser.collectUrls に渡す依存関数を組み立てる。robots.txt は source.siteUrl
+ * を基準に一度だけ取得してキャッシュし、リクエスト間隔（1 req/sec）は直近アクセス
+ * 時刻から算出することで、収集する URL 数によらずソース単位でマナーを守る
+ */
+function createCollectUrlsDeps(source: Source): CollectUrlsDeps {
+  let robots: RobotsRules | null = null;
+  let lastAccess: number | null = null;
+
+  return {
+    async fetchAllowedHtml(url: string): Promise<string> {
+      if (!robots) {
+        robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
+      }
+      const path = new URL(url).pathname;
+      if (!robots.isAllowed(path)) {
+        throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
+      }
+
+      if (lastAccess !== null) {
+        const elapsed = Date.now() - lastAccess;
+        if (elapsed < REQUEST_INTERVAL_MS) {
+          await sleep(REQUEST_INTERVAL_MS - elapsed);
+        }
+      }
+
+      const html = await fetchHtml(url);
+      lastAccess = Date.now();
+      return html;
+    },
+  };
 }
 
 /**

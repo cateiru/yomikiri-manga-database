@@ -1,5 +1,7 @@
 import type { CheerioAPI } from "cheerio";
 import type { Source } from "../config/sources.js";
+import { comicWalkerParser } from "./comic-walker/index.js";
+import { extractViewerDetail as extractComicWalkerDetail } from "./comic-walker/viewerDetail.js";
 import { assertSupportedSources, gigaviewerParser } from "./gigaviewer/index.js";
 import { extractViewerDetail as extractGigaviewerDetail } from "./gigaviewer/viewerDetail.js";
 import { magapokeParser } from "./magapoke/index.js";
@@ -14,6 +16,8 @@ export function getParser(source: Source): Parser {
       return gigaviewerParser;
     case "magapoke":
       return magapokeParser;
+    case "comic-walker":
+      return comicWalkerParser;
   }
 }
 
@@ -27,5 +31,7 @@ export function extractViewerDetail(
       return extractGigaviewerDetail($, viewerUrl);
     case "magapoke":
       return extractMagapokeDetail($, viewerUrl);
+    case "comic-walker":
+      return extractComicWalkerDetail($, viewerUrl);
   }
 }

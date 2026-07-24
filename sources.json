@@ -171,6 +171,15 @@
       "parser": "magapoke",
       "enabled": true,
       "favicon": "/favicons/magapoke.png"
+    },
+    {
+      "key": "comic-walker",
+      "name": "カドコミ",
+      "listUrls": ["https://comic-walker.com/label"],
+      "siteUrl": "https://comic-walker.com/",
+      "parser": "comic-walker",
+      "enabled": true,
+      "favicon": "/favicons/comic-walker.png"
     }
   ]
 }

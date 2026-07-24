@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ClearHistoryButton } from "@/components/ClearHistoryButton";
 import { DataTransferButton } from "@/components/DataTransferButton";
-import { getLatestDataUpdatedAt } from "@/lib/oneshots";
+import { getLatestDataUpdatedAt, getOneshotCountsBySource } from "@/lib/oneshots";
 import { listSources } from "@/lib/sources";
 import styles from "./page.module.css";
 
@@ -22,8 +22,11 @@ const lastUpdatedFormatter = new Intl.DateTimeFormat("ja-JP", {
 });
 
 export default async function AboutPage() {
-  const sources = listSources();
-  const lastUpdatedAt = await getLatestDataUpdatedAt();
+  const [lastUpdatedAt, sourceCounts] = await Promise.all([
+    getLatestDataUpdatedAt(),
+    getOneshotCountsBySource(),
+  ]);
+  const sources = listSources().filter((source) => (sourceCounts.get(source.key) ?? 0) > 0);
 
   return (
     <main className={styles.main}>

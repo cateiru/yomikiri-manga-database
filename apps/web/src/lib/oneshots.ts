@@ -247,6 +247,18 @@ export async function getOneshotsCount(): Promise<number> {
   return Number(row?.count ?? 0);
 }
 
+/** source_key ごとの掲載作品数（詳細取得済み = title IS NOT NULL のみ）を集計する */
+export async function getOneshotCountsBySource(): Promise<Map<string, number>> {
+  const db = await getDb();
+  const rows = await db
+    .select({ sourceKey: oneshots.sourceKey, count: sql<number>`count(*)` })
+    .from(oneshots)
+    .where(isNotNull(oneshots.title))
+    .groupBy(oneshots.sourceKey);
+
+  return new Map(rows.map((row) => [row.sourceKey, Number(row.count)]));
+}
+
 /** 戻り値の順序は保証しない。呼び出し元で並び替えること */
 export async function getOneshotsByIds(ids: number[]): Promise<OneshotListItem[]> {
   if (ids.length === 0) {

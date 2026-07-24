@@ -20,7 +20,15 @@ const nextConfig: NextConfig = {
   // CDN/ブラウザでキャッシュしつつ毎回再検証させたいので明示的に上書きする
   // （s-maxage=60 は CDN 側の共有キャッシュ用。ブラウザは max-age=0 のため毎回再検証する）
   async headers() {
-    const publiclyCacheablePaths = ["/", "/about", "/help", "/favorites", "/privacy", "/rss.xml"];
+    const publiclyCacheablePaths = [
+      "/",
+      "/about",
+      "/help",
+      "/favorites",
+      "/privacy",
+      "/rss.xml",
+      "/status",
+    ];
     return publiclyCacheablePaths.map((source) => ({
       source,
       headers: [

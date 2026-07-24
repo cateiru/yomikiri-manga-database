@@ -13,48 +13,73 @@ description: バッチサーバー（さくら VPS）上でリポジトリを最
 
 `compose.prod.yaml` の `batch` サービスは `build:` のみ定義されており `pull_policy` も無いため、`docker compose run --rm batch` は**既存イメージが残っていれば `git pull` 後でも再ビルドしない**。systemd timer 自身も素の `run --rm batch` を叩くだけで再ビルドはしない。つまり、**明示的にビルドし直すことだけが新しいコードを反映させる唯一の手段**であり、これがこの SKILL の core。
 
+## 重要: プロジェクト名を必ず `-p` で固定する（symlink による事故実績あり）
+
+デプロイ先のサーバーによっては、リポジトリの実パス（`/opt/yomikiri/app`）を別名の symlink 経由でも参照できる環境設定になっている場合がある（ホームディレクトリにエイリアスを置く等）。Docker Compose はプロジェクト名を**カレントディレクトリのパス文字列**から推測するため、symlink 経由の cwd から `docker compose build` を実行すると、実パスとは異なるプロジェクト名（symlink の basename）が推測され、意図しない**別タグ**にビルドされる。
+
+一方 systemd（`yomikiri-batch.service`）は `WorkingDirectory=/opt/yomikiri/app`（symlink を介さない実パス）から起動するため、プロジェクト名は `app` となり `app-batch:latest` を使う。この 2 つのタグはお互いを更新せず、`docker compose run`/`build` はエラーも警告も出さずに**別タグへ静かにビルドする**ため、pull → build を実行しても本番で使われるイメージだけが古いまま、という事故が実際に発生した。
+
+これを避けるため、**cwd がどこであっても結果が変わらないよう、この SKILL のすべての `docker compose` コマンドに `-p app` を明示指定する**（`app` は `WorkingDirectory=/opt/yomikiri/app` の basename）。念のため作業開始時に systemd 側の前提が変わっていないか確認する:
+
+```sh
+grep '^WorkingDirectory=' /etc/systemd/system/yomikiri-batch.service
+# WorkingDirectory=/opt/yomikiri/app であることを確認（basename が -p に渡すプロジェクト名と一致すること）
+```
+
+もし今後 `WorkingDirectory` の値が変わっていたら、以下の手順の `-p app` もその basename に合わせて読み替えること。
+
 ## 手順
 
 1. **作業ツリーの確認**
+
    ```sh
    git status
    ```
+
    コミットされていない変更が残っていないか確認する。残っている場合は内容を確認してから進める（無断で退避・破棄しない）。
 
 2. **ビルド前のイメージ状態を記録**
+
    ```sh
-   docker image inspect "$(docker compose -f compose.prod.yaml config --images batch)" --format '{{.Id}} {{.Created}}' 2>/dev/null || echo "(イメージ未作成)"
+   docker image inspect "$(docker compose -p app -f compose.prod.yaml config --images batch)" --format '{{.Id}} {{.Created}}' 2>/dev/null || echo "(イメージ未作成)"
    ```
-   `docker compose images -q` は `run --rm` の使い捨て運用だとコンテナが残らず常に空を返すため使わない。イメージ名は `config --images` でプロジェクト名に依存せず解決する。
+
+   `docker compose images -q` は `run --rm` の使い捨て運用だとコンテナが残らず常に空を返すため使わない。`-p app` を付けないと cwd 次第で別タグを見てしまう（上記参照）ため必須。
 
 3. **最新を取得**
+
    ```sh
    git branch --show-current   # main であることを確認
    git pull
    ```
 
 4. **イメージを再ビルド（本質的なデプロイ操作）**
+
    ```sh
-   docker compose -f compose.prod.yaml build batch
+   docker compose -p app -f compose.prod.yaml build batch
    ```
 
 5. **イメージが更新されたか確認**
+
    ```sh
-   docker image inspect "$(docker compose -f compose.prod.yaml config --images batch)" --format '{{.Id}} {{.Created}}'
+   docker image inspect "$(docker compose -p app -f compose.prod.yaml config --images batch)" --format '{{.Id}} {{.Created}}'
    ```
+
    手順 2 の Id / Created と比較し、変わっていれば更新成功。変わっていない場合は手順 3 で実際に差分が取得できていたか（`git pull` の出力）を確認する。
+   また `docker images | grep -i batch` で `app-batch` 以外のタグ（例: `yomikiri-manga-database-batch` 等、symlink 経由の誤ビルドで生まれるもの）が存在しないか確認し、あれば `docker rmi` で削除して紛らわしい残骸を残さない。
 
 6. **手動実行による疎通確認（要ユーザー確認）**
 
-   `docker compose -f compose.prod.yaml run --rm batch` は以下 2 つの副作用を伴う、実行判断をユーザーに委ねるべき操作である。**イメージの再ビルドまでで作業を止め、手動実行を行ってよいか必ずユーザーに確認してから実行する**（無断で実行しない）。
-
+   `docker compose -p app -f compose.prod.yaml run --rm batch` は以下 2 つの副作用を伴う、実行判断をユーザーに委ねるべき操作である。**イメージの再ビルドまでで作業を止め、手動実行を行ってよいか必ずユーザーに確認してから実行する**（無断で実行しない）。
    - 本番 DB に接続して実際にクロール結果を upsert する
    - 全 `enabled` ソースの一覧ページ・詳細ページへ実際に外部サイトへの HTTP リクエストを送る。systemd timer による定期実行（1 日 3 回）とは別に、手動実行のたびに追加の外部アクセスが発生するため、動作確認目的で何度も繰り返し実行しない（1 回の実行で `REQUEST_INTERVAL_MS` 等のクロールマナー自体は守られるが、実行回数を増やすこと自体が相手サイトへの負荷増になる）
 
    実行してよいと確認が取れた場合のみ、1 回だけ実行する:
+
    ```sh
-   docker compose -f compose.prod.yaml run --rm batch
+   docker compose -p app -f compose.prod.yaml run --rm batch
    ```
+
    - 正常終了（exit code 0）かどうかを確認する
    - ログは JSON 1 行形式（`apps/batch/src/logger.ts`）。`"level":"error"` が出ていないか、`URL 収集バッチが完了しました` / `詳細取得バッチが完了しました` / `引き継ぎコード削除バッチが完了しました` の 3 つが出力されているかを確認する
    - exit code 1 の場合、1 ソースの失敗が全体を止める設計ではないため、どのソースでエラーが発生したかをログの `results` フィールドから特定する

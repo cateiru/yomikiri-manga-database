@@ -189,6 +189,258 @@
       "parser": "gigaviewer",
       "enabled": true,
       "favicon": "/favicons/ourfeel.png"
+    },
+    {
+      "key": "championcross",
+      "name": "チャンピオンクロス",
+      "listUrls": ["https://championcross.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://championcross.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/championcross.png"
+    },
+    {
+      "key": "youngchampion",
+      "name": "ヤンチャンWeb",
+      "listUrls": ["https://youngchampion.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://youngchampion.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/youngchampion.png"
+    },
+    {
+      "key": "younganimal",
+      "name": "ヤングアニマルWeb",
+      "listUrls": ["https://younganimal.com/category/manga/oneShot/1"],
+      "siteUrl": "https://younganimal.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/younganimal.png"
+    },
+    {
+      "key": "comirela",
+      "name": "コミリラ",
+      "listUrls": ["https://comirela.com/category/manga/oneShot/1"],
+      "siteUrl": "https://comirela.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comirela.png"
+    },
+    {
+      "key": "g-comi",
+      "name": "Gコミ",
+      "listUrls": ["https://g-comi.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://g-comi.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/g-comi.png"
+    },
+    {
+      "key": "namicomic",
+      "name": "なみコミ",
+      "listUrls": ["https://namicomic.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://namicomic.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/namicomic.png"
+    },
+    {
+      "key": "heros-web",
+      "name": "HERO'S Web",
+      "listUrls": ["https://heros-web.com/category/manga/oneShot/1"],
+      "siteUrl": "https://heros-web.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/heros-web.png"
+    },
+    {
+      "key": "hanayume",
+      "name": "花とゆめ＋",
+      "listUrls": ["https://hanayume.com/category/manga/oneShot/1"],
+      "siteUrl": "https://hanayume.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/hanayume.png"
+    },
+    {
+      "key": "piacomic",
+      "name": "ぴあコミック",
+      "listUrls": ["https://piacomic.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://piacomic.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/piacomic.png"
+    },
+    {
+      "key": "comic-room-base",
+      "name": "COMIC ROOM BASE",
+      "listUrls": ["https://comic-room-base.com/category/manga/oneShot/1"],
+      "siteUrl": "https://comic-room-base.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comic-room-base.png"
+    },
+    {
+      "key": "takecomic",
+      "name": "竹コミ！",
+      "listUrls": ["https://takecomic.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://takecomic.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/takecomic.png"
+    },
+    {
+      "key": "mangaspa",
+      "name": "マンガSPA!",
+      "listUrls": ["https://mangaspa.nikkan-spa.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://mangaspa.nikkan-spa.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/mangaspa.png"
+    },
+    {
+      "key": "kimicomi",
+      "name": "キミコミ",
+      "listUrls": ["https://kimicomi.com/category/manga/oneShot/1"],
+      "siteUrl": "https://kimicomi.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/kimicomi.png"
+    },
+    {
+      "key": "manga-zegra",
+      "name": "マンガゼグラ",
+      "listUrls": ["https://manga-zegra.com/category/manga/oneShot/1"],
+      "siteUrl": "https://manga-zegra.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/manga-zegra.png"
+    },
+    {
+      "key": "mangalt",
+      "name": "マンガルト",
+      "listUrls": ["https://mangalt.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://mangalt.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/mangalt.png"
+    },
+    {
+      "key": "comic-growl",
+      "name": "コミックグロウル",
+      "listUrls": ["https://comic-growl.com/category/manga/oneShot/1"],
+      "siteUrl": "https://comic-growl.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comic-growl.png"
+    },
+    {
+      "key": "asacomi",
+      "name": "アサコミ",
+      "listUrls": ["https://asacomi.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://asacomi.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/asacomi.png"
+    },
+    {
+      "key": "comicpash",
+      "name": "コミックPASH! neo",
+      "listUrls": ["https://comicpash.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://comicpash.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comicpash.png"
+    },
+    {
+      "key": "comic-j-nbooks",
+      "name": "COMICリュエル＆COMICジャルダン",
+      "listUrls": ["https://comic.j-nbooks.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://comic.j-nbooks.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comic-j-nbooks.png"
+    },
+    {
+      "key": "hayacomic",
+      "name": "ハヤコミ",
+      "listUrls": ["https://hayacomic.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://hayacomic.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/hayacomic.png"
+    },
+    {
+      "key": "magkan",
+      "name": "MAGKAN",
+      "listUrls": ["https://kansai.mag-garden.co.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://kansai.mag-garden.co.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/magkan.png"
+    },
+    {
+      "key": "comicride",
+      "name": "ライコミ",
+      "listUrls": ["https://comicride.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://comicride.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comicride.png"
+    },
+    {
+      "key": "manga-bang-comics",
+      "name": "マンガBANGコミックス",
+      "listUrls": ["https://comics.manga-bang.com/category/manga/oneShot/1"],
+      "siteUrl": "https://comics.manga-bang.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/manga-bang-comics.png"
+    },
+    {
+      "key": "booklista-studio",
+      "name": "booklistaSTUDIOweb",
+      "listUrls": ["https://studio.booklista.co.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://studio.booklista.co.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/booklista-studio.png"
+    },
+    {
+      "key": "cork-studio",
+      "name": "コルクスタジオ",
+      "listUrls": ["https://ebookstore.corkagency.com/category/manga/oneShot/1"],
+      "siteUrl": "https://ebookstore.corkagency.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/cork-studio.png"
+    },
+    {
+      "key": "comic-bro",
+      "name": "comic Bro",
+      "listUrls": ["https://comics.comici.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://comics.comici.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/comic-bro.png"
+    },
+    {
+      "key": "bigcomics",
+      "name": "ビッコミ",
+      "listUrls": ["https://bigcomics.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://bigcomics.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/bigcomics.png"
+    },
+    {
+      "key": "rimacomiplus",
+      "name": "リマコミ＋",
+      "listUrls": ["https://rimacomiplus.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://rimacomiplus.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/rimacomiplus.png"
     }
   ]
 }

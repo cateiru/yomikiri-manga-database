@@ -24,22 +24,24 @@ processors:
       - key: service.name
         value: "yomikiri-batch"
         action: upsert
-  # journald レシーバーは journalctl -o json の生JSON（MESSAGE/PRIORITY/_SYSTEMD_UNIT 等）を
-  # そのまま body に渡してくる。apps/batch/src/logger.ts が出力するJSONは、この outer JSON の
-  # MESSAGE フィールドの中にエスケープされた文字列としてネストされているため、
-  # 1回目の ParseJSON では outer（journald側）のフィールドしか取れない。
-  # そこで MESSAGE を取り出して body を差し替えたうえで、もう一度 ParseJSON して
-  # level/message 等を取り出す（二重デコード）。level を severity_text / severity_number
-  # にも反映させる（未設定だと Mackerel 側のログレベル表示が UNSPECIFIED のままになる）。
-  # apps/batch/src/logger.ts が出力するレベルは info/warn/error の3種類のみ。
+  # journald レシーバーは body を文字列ではなく構造化された Map として渡してくる
+  # （MESSAGE/PRIORITY/_SYSTEMD_UNIT 等がキーになったマップ）。まず body["MESSAGE"] を
+  # 取り出して body を文字列に差し替える。apps/batch/src/logger.ts が出力する行では
+  # この MESSAGE の中身がそのまま1回JSONエンコードされた文字列になっているため、
+  # それを ParseJSON して level/message 等を取り出す。level を severity_text /
+  # severity_number にも反映させる（未設定だと Mackerel 側のログレベル表示が
+  # UNSPECIFIED のままになる）。apps/batch/src/logger.ts が出力するレベルは
+  # info/warn/error の3種類のみ。
+  # systemd 自身が出すユニットのライフサイクルメッセージ（JSONでない）は
+  # ParseJSON 側の条件が false になり body がプレーンテキストのまま残るだけで、
+  # パイプライン自体は止まらない（error_mode: ignore）。
   transform:
     error_mode: ignore # JSON以外の行が来てもパイプラインを止めない
     log_statements:
       - context: log
         statements:
-          - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
-          - 'set(body, attributes["MESSAGE"]) where attributes["MESSAGE"] != nil'
-          - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsMatch(body, "^\\{")'
+          - 'set(body, body["MESSAGE"]) where IsMap(body) and body["MESSAGE"] != nil'
+          - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsString(body) and IsMatch(body, "^\\{")'
           - 'set(severity_text, attributes["level"]) where attributes["level"] != nil'
           - 'set(severity_number, SEVERITY_NUMBER_INFO) where severity_text == "info"'
           - 'set(severity_number, SEVERITY_NUMBER_WARN) where severity_text == "warn"'

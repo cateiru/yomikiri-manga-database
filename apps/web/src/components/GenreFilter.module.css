@@ -1,10 +1,66 @@
 .filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  min-width: 0;
   margin: 0 0 var(--space-6);
   padding: 0;
   border: 0;
+}
+
+.wrapper {
+  position: relative;
+}
+
+.scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fadeLeft,
+.fadeRight {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll > * {
+    flex-shrink: 0;
+  }
+
+  .fadeLeft,
+  .fadeRight {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--space-6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .fadeLeft {
+    left: 0;
+    background: linear-gradient(to right, var(--color-bg), transparent);
+  }
+
+  .fadeRight {
+    right: 0;
+    background: linear-gradient(to left, var(--color-bg), transparent);
+  }
+
+  .fadeLeft[data-visible="true"],
+  .fadeRight[data-visible="true"] {
+    opacity: 1;
+  }
 }
 
 .legend {

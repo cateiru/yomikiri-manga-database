@@ -16,8 +16,8 @@ export class HttpError extends Error {
   }
 }
 
-// リトライ間隔。1 req/sec のクロールマナー（REQUEST_INTERVAL_MS）を
-// リトライ時も破らないよう、それ以上の間隔を空ける
+// リトライ間隔。クロールマナーの 1 req/sec（1000ms 間隔）をリトライ時も
+// 破らないよう、1000ms 以上空ける
 const RETRY_DELAY_MS = 1000;
 
 function sleep(ms: number): Promise<void> {

@@ -50,8 +50,16 @@ async function main() {
   } finally {
     // DB 接続を開いたままにすると、本番の Neon（アイドル時にコンピュートを
     // 自動サスペンドする）が切断してイベントループを解放するまでプロセスが
-    // 終了できず、systemd/pnpm への完了報告が数分単位で遅延するため明示的に閉じる
-    await db.$client.end();
+    // 終了できず、systemd/pnpm への完了報告が数分単位で遅延するため明示的に閉じる。
+    // クローズ自体の失敗でバッチ本体の成否（exitCode・例外）をマスクしないよう、
+    // ここでは警告ログに留める
+    try {
+      await db.$client.end();
+    } catch (error) {
+      log("warn", "DB 接続のクローズに失敗しました", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
 

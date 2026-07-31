@@ -1,13 +1,19 @@
-# yomikiri-manga-database
+<img src="https://github.com/cateiru/yomikiri-manga-database/blob/main/apps/web/public/og-image.png?raw=true" style="width: 100%; height: auto;" />
+
+<h1 style="text-align: center;">読み切り漫画データベース</h1>
+
+<p style="text-align: center;">
+  <a href="https://yomikiri.cateiru.com/" target="_blank">https://yomikiri.cateiru.com/</a>
+</p>
 
 各漫画配信サービスに掲載されている「読み切り漫画」を横断的に収集し、一覧表示する Web サービス。
 
 ## 構成
 
-| ディレクトリ | 内容 |
-| --- | --- |
-| `apps/web` | 一覧表示・投票 UI（Next.js） |
-| `apps/batch` | 各サービスをクロールしてデータを収集するバッチ |
+| ディレクトリ  | 内容                                                          |
+| ------------- | ------------------------------------------------------------- |
+| `apps/web`    | 一覧表示・投票 UI（Next.js）                                  |
+| `apps/batch`  | 各サービスをクロールしてデータを収集するバッチ                |
 | `packages/db` | DB スキーマ・マイグレーション・DB クライアント（Drizzle ORM） |
 
 ## ローカル開発環境
@@ -59,3 +65,7 @@ PostgreSQL のデータは named volume に保存されるため、コンテナ�
 `.github/workflows/ci.yml` で Pull Request と `main` への push を検証する。
 
 - `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm build` を実行する
+
+## LICENSE
+
+[MIT](./LICENSE)

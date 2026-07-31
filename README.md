@@ -1,8 +1,8 @@
 <img src="https://github.com/cateiru/yomikiri-manga-database/blob/main/apps/web/public/og-image.png?raw=true" style="width: 100%; height: auto;" />
 
-<h1 style="text-align: center;">読み切り漫画データベース</h1>
+<h1 align="center">読み切り漫画データベース</h1>
 
-<p style="text-align: center;">
+<p align="center">
   <a href="https://yomikiri.cateiru.com/" target="_blank">https://yomikiri.cateiru.com/</a>
 </p>
 

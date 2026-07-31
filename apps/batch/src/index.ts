@@ -18,31 +18,48 @@ async function main() {
   const sources = loadEnabledSources(sourcesPath);
   const db = createDb(databaseUrl);
 
-  // 1. 各サイトの読み切り一覧ページからビューワー URL を収集してキュー（oneshots）に登録する
-  const collectResults = await collectUrls(db, sources);
-  log("info", "URL 収集バッチが完了しました", { results: collectResults });
+  try {
+    // 1. 各サイトの読み切り一覧ページからビューワー URL を収集してキュー（oneshots）に登録する
+    const collectResults = await collectUrls(db, sources);
+    log("info", "URL 収集バッチが完了しました", { results: collectResults });
 
-  // 2. キューにある詳細未取得のビューワー URL へアクセスし、詳細を取得する
-  const detailResults = await fetchDetails(db, sources);
-  log("info", "詳細取得バッチが完了しました", { results: detailResults });
+    // 2. キューにある詳細未取得のビューワー URL へアクセスし、詳細を取得する
+    const detailResults = await fetchDetails(db, sources);
+    log("info", "詳細取得バッチが完了しました", { results: detailResults });
 
-  // 3. 有効期限（24時間）を過ぎたデータ引き継ぎコードを物理削除する
-  const deletedTransferCodeCount = await deleteExpiredTransferCodes(db);
-  log("info", "引き継ぎコード削除バッチが完了しました", { deletedCount: deletedTransferCodeCount });
+    // 3. 有効期限（24時間）を過ぎたデータ引き継ぎコードを物理削除する
+    const deletedTransferCodeCount = await deleteExpiredTransferCodes(db);
+    log("info", "引き継ぎコード削除バッチが完了しました", {
+      deletedCount: deletedTransferCodeCount,
+    });
 
-  // result.error は「ソース単位で見た一時的・想定外のエラー」（robots 拒否、
-  // ネットワークエラー、5xx 等）が発生した場合にのみセットされる。
-  // 404/410 のような「恒久的に取得できないと分かっている個別 URL のエラー」は
-  // fetchDetails 内で detailsFetchedAt を更新した上で握りつぶし、result.error には
-  // 積まれない（次回以降キューに残らないため、放置しても batch は "failed" のまま
-  // にはならない）。そのため、ここでの exitCode = 1 は
-  // 「一覧収集自体の失敗」または「詳細取得中の一時的なエラー」のみを表す
-  const hasError =
-    collectResults.some((result) => result.error !== null) ||
-    detailResults.some((result) => result.error !== null);
+    // result.error は「ソース単位で見た一時的・想定外のエラー」（robots 拒否、
+    // ネットワークエラー、5xx 等）が発生した場合にのみセットされる。
+    // 404/410 のような「恒久的に取得できないと分かっている個別 URL のエラー」は
+    // fetchDetails 内で detailsFetchedAt を更新した上で握りつぶし、result.error には
+    // 積まれない（次回以降キューに残らないため、放置しても batch は "failed" のまま
+    // にはならない）。そのため、ここでの exitCode = 1 は
+    // 「一覧収集自体の失敗」または「詳細取得中の一時的なエラー」のみを表す
+    const hasError =
+      collectResults.some((result) => result.error !== null) ||
+      detailResults.some((result) => result.error !== null);
 
-  if (hasError) {
-    process.exitCode = 1;
+    if (hasError) {
+      process.exitCode = 1;
+    }
+  } finally {
+    // DB 接続を開いたままにすると、本番の Neon（アイドル時にコンピュートを
+    // 自動サスペンドする）が切断してイベントループを解放するまでプロセスが
+    // 終了できず、systemd/pnpm への完了報告が数分単位で遅延するため明示的に閉じる。
+    // クローズ自体の失敗でバッチ本体の成否（exitCode・例外）をマスクしないよう、
+    // ここでは警告ログに留める
+    try {
+      await db.$client.end();
+    } catch (error) {
+      log("warn", "DB 接続のクローズに失敗しました", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
 

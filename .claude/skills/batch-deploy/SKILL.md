@@ -15,18 +15,16 @@ description: バッチサーバー（さくら VPS）上でリポジトリを最
 
 ## 重要: プロジェクト名を必ず `-p` で固定する（symlink による事故実績あり）
 
-デプロイ先のサーバーによっては、リポジトリの実パス（`/opt/yomikiri/app`）を別名の symlink 経由でも参照できる環境設定になっている場合がある（ホームディレクトリにエイリアスを置く等）。Docker Compose はプロジェクト名を**カレントディレクトリのパス文字列**から推測するため、symlink 経由の cwd から `docker compose build` を実行すると、実パスとは異なるプロジェクト名（symlink の basename）が推測され、意図しない**別タグ**にビルドされる。
+`compose.prod.yaml` 冒頭の `name: app` により、プロジェクト名は cwd のパス文字列に関わらず常に `app` に固定される（以前はこの `name:` が無く、Docker Compose がプロジェクト名を**カレントディレクトリのパス文字列**から推測していたため、リポジトリの実パスを別名の symlink 経由で参照する環境で `docker compose build` を実行すると、実パスとは異なるプロジェクト名（symlink の basename）が推測され、意図しない**別タグ**へ静かにビルドされる事故が実際に発生していた）。
 
-一方 ofelia コンテナは `/opt/yomikiri/app` をホストと同一の絶対パスで bind mount しており（symlink を介さない実パス）、`run-batch.sh` 内の `docker compose` もこのパスから実行されるため、プロジェクト名は `app` となり `app-batch:latest` を使う。この 2 つのタグはお互いを更新せず、`docker compose run`/`build` はエラーも警告も出さずに**別タグへ静かにビルドする**ため、pull → build を実行しても本番で使われるイメージだけが古いまま、という事故が実際に発生した。
-
-これを避けるため、**cwd がどこであっても結果が変わらないよう、この SKILL のすべての `docker compose` コマンドに `-p app` を明示指定する**（`app` は `/opt/yomikiri/app` の basename）。念のため作業開始時に前提が変わっていないか確認する:
+`name: app` が入った今も、**この SKILL のすべての `docker compose` コマンドには `-p app` を明示指定する**（`name:` と同じ値を明示するだけで、実害はなく意図も明確になる。省略しても `name: app` により同じ結果になるはずだが、`compose.prod.yaml` からこの `name:` 行が将来削除・変更された場合の回帰を検知しやすくするため、明示を残す）。念のため作業開始時に前提が変わっていないか確認する:
 
 ```sh
 docker compose -p app -f compose.prod.yaml config --images batch
-# app-batch:latest が返ることを確認（basename が -p に渡すプロジェクト名と一致すること）
+# app-batch:latest が返ることを確認
 ```
 
-もし今後 `/opt/yomikiri/app` の配置パスが変わっていたら、以下の手順の `-p app` もその basename に合わせて読み替えること。
+もし `app-batch:latest` 以外が返る場合、`compose.prod.yaml` の `name: app` が変更・削除されていないか確認する。変更されていた場合は、以下の手順の `-p app` もその新しい値に合わせて読み替えること。
 
 ## 手順
 

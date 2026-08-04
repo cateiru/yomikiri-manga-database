@@ -8,6 +8,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      # CI では playwright の Chromium を実際には起動しない（vitest はモックのみ）ため、
+      # pnpm install のたびにダウンロードして時間を浪費しないようにする
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4
 

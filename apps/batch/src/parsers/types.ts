@@ -19,6 +19,13 @@ export interface ParsedViewerDetail {
  */
 export interface CollectUrlsDeps {
   fetchAllowedHtml(url: string): Promise<string>;
+  /**
+   * 静的 HTML の取得だけでは中身を得られない SPA サイト向け。headless Chromium で
+   * 実際にページを開き、ページ自身の JS が発行するレスポンスのうち matchResponse に
+   * マッチした JSON を返す。レート制限は fetchAllowedHtml とは別に管理される（重い
+   * ページ遷移のため間隔を長めに取る）
+   */
+  fetchAllowedViaHeadless?<T>(url: string, matchResponse: (url: string) => boolean): Promise<T>;
 }
 
 export interface Parser {

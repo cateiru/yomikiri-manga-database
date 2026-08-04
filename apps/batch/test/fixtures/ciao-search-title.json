@@ -1,0 +1,24 @@
+{
+  "status": "success",
+  "response_code": 0,
+  "error_message": "",
+  "title_id_list": [286, 289],
+  "title_list": [
+    {
+      "title_id": 286,
+      "title_name": "すきま男の夢",
+      "author_text": "小室栄子",
+      "first_episode_id": 7309,
+      "total_episode_count": 1,
+      "latest_paid_episode_id": []
+    },
+    {
+      "title_id": 289,
+      "title_name": "あの世慣れ",
+      "author_text": "サンプル作者",
+      "first_episode_id": 7310,
+      "total_episode_count": 1,
+      "latest_paid_episode_id": []
+    }
+  ]
+}

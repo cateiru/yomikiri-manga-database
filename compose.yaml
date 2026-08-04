@@ -28,7 +28,7 @@ services:
         condition: service_healthy
 
   web:
-    image: node:24.16.0-bookworm-slim
+    image: node:24.19.0-bookworm-slim
     working_dir: /app
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/yomikiri
@@ -58,7 +58,7 @@ services:
       "
 
   batch:
-    image: node:24.16.0-bookworm-slim
+    image: node:24.19.0-bookworm-slim
     working_dir: /app
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/yomikiri

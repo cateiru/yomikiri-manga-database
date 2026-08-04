@@ -1,5 +1,7 @@
 import type { CheerioAPI } from "cheerio";
 import type { Source } from "../config/sources.js";
+import { ciaoParser } from "./ciao/index.js";
+import { extractViewerDetail as extractCiaoDetail } from "./ciao/viewerDetail.js";
 import { comicWalkerParser } from "./comic-walker/index.js";
 import { extractViewerDetail as extractComicWalkerDetail } from "./comic-walker/viewerDetail.js";
 import { comiciParser } from "./comici/index.js";
@@ -22,6 +24,8 @@ export function getParser(source: Source): Parser {
       return comicWalkerParser;
     case "comici":
       return comiciParser;
+    case "ciao":
+      return ciaoParser;
   }
 }
 
@@ -39,5 +43,7 @@ export function extractViewerDetail(
       return extractComicWalkerDetail($, viewerUrl);
     case "comici":
       return extractComiciDetail($, viewerUrl);
+    case "ciao":
+      return extractCiaoDetail($, viewerUrl);
   }
 }

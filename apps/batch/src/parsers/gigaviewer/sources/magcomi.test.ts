@@ -23,6 +23,7 @@ describe("gigaviewer/magcomi", () => {
     for (const item of items) {
       expect(item.viewerUrl).toMatch(/^https:\/\/magcomi\.com\/episode\/\d+$/);
     }
+    expect(items).toContainEqual({ viewerUrl: "https://magcomi.com/episode/3000000000000000001" });
   });
 
   it("漫画賞ページから漫画賞作品のみを抽出できる（アンソロジーは含まない）", () => {

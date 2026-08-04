@@ -46,3 +46,61 @@ services:
       ofelia.enabled: "true"
       ofelia.job-local.yomikiri-batch.schedule: "5 0,12,18 * * *"
       ofelia.job-local.yomikiri-batch.command: "/opt/yomikiri/app/deploy/bin/run-batch.sh"
+
+  # ホスト監視 + バッチ死活監視の check プラグイン（deploy/mackerel/yomikiri-batch-checks.conf）。
+  # 公式イメージ（debian ベース）に docker CLI + compose プラグインを足しただけの
+  # deploy/mackerel-agent/Dockerfile でビルドする（yomikiri-ofelia-service チェックが
+  # `docker compose ps` を叩くため）。
+  mackerel-agent:
+    build:
+      context: .
+      dockerfile: deploy/mackerel-agent/Dockerfile
+    restart: unless-stopped
+    # hostname は明示的に固定しない（Docker が割り当てるコンテナ ID 風の名前になり、
+    # Mackerel 上の表示名としては読みにくくなるが許容する）。`${VAR:?}` 形式の必須変数を
+    # ここで使うと、docker compose がファイル全体を interpolate する仕様上、
+    # ofelia コンテナ内の run-batch.sh（`docker compose ... run --rm batch`）や
+    # yomikiri-ofelia-service チェック（`docker compose ... ps ofelia`）など
+    # このファイルに対する他の compose 呼び出しまで、その変数を渡していないという理由だけで
+    # 軒並み失敗する（実機検証で確認済み）。ホストの同一性は hostname ではなく
+    # /var/lib/mackerel-agent に永続化される host id で担保している。
+    env_file:
+      # apikey=... の1行のみ（Docker公式イメージの startup.sh が読む環境変数名は
+      # 小文字の "apikey"。otelcol-mackerel 側の "MACKEREL_APIKEY" とは別名なので注意）。
+      - /etc/yomikiri/mackerel-agent.env
+    environment:
+      # startup.sh が sed でこの内容を mackerel-agent.conf の include 行に書き込む。
+      # include 先の [plugin.checks.*] も mackerel-agent 側でマージされる
+      # （mackerelio/mackerel-agent の config.go の includeConfigFile が
+      # setEachPlugins を呼び直すため。旧 yomikiri-batch-checks.conf の
+      # 「conf.d からは読み込まれない」というコメントは誤りだったので修正済み）。
+      include: /etc/mackerel-agent/conf.d/*.conf
+    volumes:
+      # mackerel-plugin-docker 等のためではなく、yomikiri-ofelia-service チェックが
+      # `docker compose ps` を実行するために必要。
+      - /var/run/docker.sock:/var/run/docker.sock
+      # host id（/var/lib/mackerel-agent/id-*.json）を永続化し、コンテナ再作成の
+      # たびに Mackerel 上で新規ホストとして登録されないようにする
+      # （ホスト直接インストールされていた mackerel-agent と同一パスにすることで、
+      # 移行時に既存ホストの id を引き継げる）。
+      - /var/lib/mackerel-agent:/var/lib/mackerel-agent
+      - /opt/yomikiri/app:/opt/yomikiri/app:ro
+      - /var/lib/yomikiri:/var/lib/yomikiri:ro
+      - ./deploy/mackerel/yomikiri-batch-checks.conf:/etc/mackerel-agent/conf.d/yomikiri-batch-checks.conf:ro
+
+  # バッチログ（/var/log/yomikiri/batch.log）を Mackerel の新ログ機能（β）に転送する
+  # OTel Collector。設定は deploy/mackerel/otelcol-mackerel-config.yaml を参照。
+  otelcol-mackerel:
+    image: mackerel/otelcol-mackerel:latest
+    restart: unless-stopped
+    env_file:
+      # MACKEREL_APIKEY=... の1行のみ。
+      - /etc/yomikiri/otelcol-mackerel.env
+    # イメージの ENTRYPOINT は /usr/bin/otelcol-mackerel 固定なので CMD だけ上書きする。
+    # 公式のカスタム設定手順（README "Advanced Usage" 参照）に倣い、
+    # /home/nonroot/config.yaml（イメージが distroless nonroot ベースのホームディレクトリ）に
+    # bind mount する。
+    command: ["--config", "/home/nonroot/config.yaml"]
+    volumes:
+      - ./deploy/mackerel/otelcol-mackerel-config.yaml:/home/nonroot/config.yaml:ro
+      - /var/log/yomikiri:/var/log/yomikiri:ro

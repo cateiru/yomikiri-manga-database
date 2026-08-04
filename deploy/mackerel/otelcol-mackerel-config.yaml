@@ -1,28 +1,28 @@
 # otelcol-mackerel（MDOT Collector）のログ収集パイプライン定義。
-# VPS 上の /etc/otelcol-mackerel/config.yaml にコピーして使う
-# （docs/plans/006_デプロイ・運用.md のセットアップ手順を参照）。
+# 本番は mackerel/otelcol-mackerel イメージ（compose.prod.yaml の otelcol-mackerel サービス）に
+# /home/nonroot/config.yaml として bind mount して使う。
 #
 # MACKEREL_APIKEY 等の秘匿情報はここには書かない
-# （/etc/otelcol-mackerel/otelcol-mackerel.conf 側で管理する）。
+# （compose.prod.yaml の otelcol-mackerel サービスの env_file 側で管理する）。
 #
 # バッチは ofelia (job-local) の run-batch.sh から起動されるため systemd unit として
 # 動かない。journald にはログが乗らないため、run-batch.sh が標準出力・標準エラーを
 # リダイレクトしている /var/log/yomikiri/batch.log を filelog receiver で直接読む。
 # 対象ファイルを1本に限定することで、旧 journald 設定の units フィルタと同等の
 # 「コスト事故防止（無料枠 月1GB の超過防止）」を確定的に維持する。
+#
+# file_storage extension（読み取りカーソルの永続化）は使わない。mackerel/otelcol-mackerel
+# ディストリビューションにこのコンポーネントが含まれておらず
+# （実際に起動して "unknown type: file_storage" エラーで確認済み。upstream の
+# manifest.yaml にも extensions セクションが無い）、代わりに storage 未指定のまま動かす。
+# 影響は Collector 再起動中に出力されたログが再起動後に再読込されない
+# （`start_at: end` のため）ことのみで、致命的ではないため許容する。
 
 receivers:
   filelog:
     include:
       - /var/log/yomikiri/batch.log
     start_at: end # 導入時点までの過去ログを一括取り込みしない
-    storage: file_storage/otelcol
-
-extensions:
-  # Collector 停止・再起動時にも読み取りカーソルを保持し、再起動中に出力された
-  # ログの欠落を防ぐ。
-  file_storage/otelcol:
-    directory: /var/lib/otelcol-mackerel/file_storage
 
 processors:
   # Mackerel はログを service.name（+ service.namespace）リソース属性で識別するため、
@@ -53,11 +53,11 @@ processors:
 
 exporters:
   mackerel_otlp: {}
-  # APIキーは /etc/otelcol-mackerel/otelcol-mackerel.conf の
-  # MACKEREL_APIKEY 環境変数から exporter が読む。
+  # APIキーは compose.prod.yaml の otelcol-mackerel サービスの env_file
+  # （/etc/yomikiri/otelcol-mackerel.env）で渡す MACKEREL_APIKEY 環境変数から
+  # exporter が読む。
 
 service:
-  extensions: [file_storage/otelcol]
   pipelines:
     logs:
       receivers: [filelog]

@@ -5,7 +5,7 @@ description: バッチサーバー（さくら VPS）上でリポジトリを最
 
 # バッチサーバーへの反映（git pull → イメージ再ビルド → 動作確認）
 
-さくら VPS 上のバッチサーバーで、リポジトリの最新変更（`apps/batch`・`packages/db`・`sources.json` 等）を本番のバッチ実行に反映する手順。バッチは systemd timer から `docker compose -f compose.prod.yaml run --rm batch` として毎日 00:05・12:05・18:05（JST）に使い捨てコンテナとして実行される（常駐しない）。
+さくら VPS 上のバッチサーバーで、リポジトリの最新変更（`apps/batch`・`packages/db`・`sources.json` 等）を本番のバッチ実行に反映する手順。バッチは常駐する ofelia コンテナ（job-local）から `docker compose -f compose.prod.yaml run --rm batch` として毎日 00:05・12:05・18:05（JST）に使い捨てコンテナとして実行される（batch サービス自体は常駐しない）。
 
 作業はリポジトリのルートディレクトリ（`compose.prod.yaml` がある場所）で行う。
 
@@ -17,16 +17,16 @@ description: バッチサーバー（さくら VPS）上でリポジトリを最
 
 デプロイ先のサーバーによっては、リポジトリの実パス（`/opt/yomikiri/app`）を別名の symlink 経由でも参照できる環境設定になっている場合がある（ホームディレクトリにエイリアスを置く等）。Docker Compose はプロジェクト名を**カレントディレクトリのパス文字列**から推測するため、symlink 経由の cwd から `docker compose build` を実行すると、実パスとは異なるプロジェクト名（symlink の basename）が推測され、意図しない**別タグ**にビルドされる。
 
-一方 systemd（`yomikiri-batch.service`）は `WorkingDirectory=/opt/yomikiri/app`（symlink を介さない実パス）から起動するため、プロジェクト名は `app` となり `app-batch:latest` を使う。この 2 つのタグはお互いを更新せず、`docker compose run`/`build` はエラーも警告も出さずに**別タグへ静かにビルドする**ため、pull → build を実行しても本番で使われるイメージだけが古いまま、という事故が実際に発生した。
+一方 ofelia コンテナは `/opt/yomikiri/app` をホストと同一の絶対パスで bind mount しており（symlink を介さない実パス）、`run-batch.sh` 内の `docker compose` もこのパスから実行されるため、プロジェクト名は `app` となり `app-batch:latest` を使う。この 2 つのタグはお互いを更新せず、`docker compose run`/`build` はエラーも警告も出さずに**別タグへ静かにビルドする**ため、pull → build を実行しても本番で使われるイメージだけが古いまま、という事故が実際に発生した。
 
-これを避けるため、**cwd がどこであっても結果が変わらないよう、この SKILL のすべての `docker compose` コマンドに `-p app` を明示指定する**（`app` は `WorkingDirectory=/opt/yomikiri/app` の basename）。念のため作業開始時に systemd 側の前提が変わっていないか確認する:
+これを避けるため、**cwd がどこであっても結果が変わらないよう、この SKILL のすべての `docker compose` コマンドに `-p app` を明示指定する**（`app` は `/opt/yomikiri/app` の basename）。念のため作業開始時に前提が変わっていないか確認する:
 
 ```sh
-grep '^WorkingDirectory=' /etc/systemd/system/yomikiri-batch.service
-# WorkingDirectory=/opt/yomikiri/app であることを確認（basename が -p に渡すプロジェクト名と一致すること）
+docker compose -p app -f compose.prod.yaml config --images batch
+# app-batch:latest が返ることを確認（basename が -p に渡すプロジェクト名と一致すること）
 ```
 
-もし今後 `WorkingDirectory` の値が変わっていたら、以下の手順の `-p app` もその basename に合わせて読み替えること。
+もし今後 `/opt/yomikiri/app` の配置パスが変わっていたら、以下の手順の `-p app` もその basename に合わせて読み替えること。
 
 ## 手順
 
@@ -72,7 +72,7 @@ grep '^WorkingDirectory=' /etc/systemd/system/yomikiri-batch.service
 
    `docker compose -p app -f compose.prod.yaml run --rm batch` は以下 2 つの副作用を伴う、実行判断をユーザーに委ねるべき操作である。**イメージの再ビルドまでで作業を止め、手動実行を行ってよいか必ずユーザーに確認してから実行する**（無断で実行しない）。
    - 本番 DB に接続して実際にクロール結果を upsert する
-   - 全 `enabled` ソースの一覧ページ・詳細ページへ実際に外部サイトへの HTTP リクエストを送る。systemd timer による定期実行（1 日 3 回）とは別に、手動実行のたびに追加の外部アクセスが発生するため、動作確認目的で何度も繰り返し実行しない（1 回の実行で `REQUEST_INTERVAL_MS` 等のクロールマナー自体は守られるが、実行回数を増やすこと自体が相手サイトへの負荷増になる）
+   - 全 `enabled` ソースの一覧ページ・詳細ページへ実際に外部サイトへの HTTP リクエストを送る。ofelia による定期実行（1 日 3 回）とは別に、手動実行のたびに追加の外部アクセスが発生するため、動作確認目的で何度も繰り返し実行しない（1 回の実行で `REQUEST_INTERVAL_MS` 等のクロールマナー自体は守られるが、実行回数を増やすこと自体が相手サイトへの負荷増になる）
 
    実行してよいと確認が取れた場合のみ、1 回だけ実行する:
 
@@ -85,7 +85,7 @@ grep '^WorkingDirectory=' /etc/systemd/system/yomikiri-batch.service
    - exit code 1 の場合、1 ソースの失敗が全体を止める設計ではないため、どのソースでエラーが発生したかをログの `results` フィールドから特定する
    - 失敗したからといって原因調査のために再実行を繰り返さない。ログから読み取れる範囲で判断し、追加実行が必要な場合も改めてユーザーに確認する
 
-   ユーザーが手動実行を望まない場合は、イメージの再ビルドが完了した時点で作業終了とし、実際の反映確認は次回の systemd timer 実行（00:05・12:05・18:05 JST）に委ねる。
+   ユーザーが手動実行を望まない場合は、イメージの再ビルドが完了した時点で作業終了とし、実際の反映確認は次回の ofelia スケジュール実行（00:05・12:05・18:05 JST）に委ねる。
 
 ## スコープ外
 

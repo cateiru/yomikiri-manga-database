@@ -1,0 +1,15 @@
+# /etc/logrotate.d/yomikiri-batch にコピーして使う
+# （docs/plans/006_デプロイ・運用.md のセットアップ手順を参照）。
+#
+# copytruncate は使わない。run-batch.sh は毎回 `>>` でファイルを開き直す短命プロセスで
+# ファイルディスクリプタを長時間保持しないため、通常の rename ベース rotate（デフォルト）で
+# otelcol-mackerel の filelog receiver にとって安全（copytruncate はトランケート時に
+# receiver の読み取り位置がずれるリスクがある）。
+/var/log/yomikiri/batch.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+}

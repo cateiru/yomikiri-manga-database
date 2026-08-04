@@ -1,10 +1,48 @@
 services:
-  # 本番バッチ。systemd timer から `docker compose -f compose.prod.yaml run --rm batch`
-  # として都度起動・都度破棄する（restart は指定しない。常駐させると
-  # 正常終了のたびに再起動してしまい「6 時間ごと」の実行間隔と両立しないため）
+  # 本番バッチ。ofelia (job-local) から
+  # `docker compose -p app -f compose.prod.yaml run --rm batch` として都度起動・都度破棄する
+  # （restart は指定しない。常駐させると正常終了のたびに再起動してしまい
+  # 「00:05・12:05・18:05 の 1 日 3 回」の実行スケジュールと両立しないため）。
+  # `up -d` 実行時にこのサービスだけが常駐・自動起動してしまわないよう profiles で縛る
+  # （`docker compose run` はサービスに割り当てられた profile を自動的に有効化するため
+  # profiles を付けても run 自体の挙動は変わらない）
   batch:
     build:
       context: .
       dockerfile: apps/batch/Dockerfile
+    env_file:
+      - /etc/yomikiri/batch.env
+    profiles: ["batch"]
+
+  # VPS 側スケジューラ本体。`docker compose up -d` でこのサービスだけが常駐し、
+  # labels で定義したジョブ（job-local）を cron ライクなスケジュールで実行する。
+  # batch コンテナ自体ではなく「batch を起動するコマンド（run-batch.sh）」を実行する役割。
+  ofelia:
+    build:
+      context: .
+      dockerfile: deploy/ofelia/Dockerfile
+    restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      # ofelia (robfig/cron) は CRON_TZ= prefix への対応が確認できなかったため、
+      # schedule 文字列側では指定せず、コンテナのローカルタイムゾーンを介して反映する
+      # （ofelia のベースイメージ alpine には tzdata が入っているため機能する）
+      TZ: Asia/Tokyo
+    volumes:
+      # ofelia コンテナ内の docker CLI からホストの Docker デーモンを操作するために必要
+      - /var/run/docker.sock:/var/run/docker.sock
+      # ホストと同一の絶対パスで bind mount することで、ofelia コンテナ内から叩く
+      # `docker compose -p app -f compose.prod.yaml run --rm batch` がホスト側 Docker
+      # デーモンに対してホストと同じパスで解釈され、-p app のタグ規約と一致し続ける
+      # （symlink 経由の別パスからビルドしてタグがズレる事故を構造的に排除する）
+      - /opt/yomikiri/app:/opt/yomikiri/app:ro
+      # env_file は docker compose のクライアント側（= このコンテナ内の docker CLI）で
+      # 解決されるため、ホストの /etc/yomikiri/batch.env をここにも同じパスでマウントする
+      # （マウントし忘れると batch の起動が "env file not found" で失敗する）
+      - /etc/yomikiri/batch.env:/etc/yomikiri/batch.env:ro
+      - /var/lib/yomikiri:/var/lib/yomikiri # last-success / last-failure
+      - /var/log/yomikiri:/var/log/yomikiri # filelog receiver が読むログファイル
+    working_dir: /opt/yomikiri/app
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-local.yomikiri-batch.schedule: "5 0,12,18 * * *"
+      ofelia.job-local.yomikiri-batch.command: "/opt/yomikiri/app/deploy/bin/run-batch.sh"

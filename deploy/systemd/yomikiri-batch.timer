@@ -1,9 +1,0 @@
-[Unit]
-Description=Run yomikiri-batch at 00:05, 12:05, 18:05 JST
-
-[Timer]
-OnCalendar=*-*-* 00,12,18:05:00 Asia/Tokyo
-Persistent=true
-
-[Install]
-WantedBy=timers.target

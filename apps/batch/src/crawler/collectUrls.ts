@@ -9,9 +9,13 @@ import { log } from "../logger.js";
 import { assertSupportedSources, getParser } from "../parsers/index.js";
 import type { CollectUrlsDeps, ParsedOneshotUrl } from "../parsers/types.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
+import { fetchJsonViaHeadless } from "./headlessBrowser.js";
 import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
 const REQUEST_INTERVAL_MS = 1000;
+// headless Chromium でのページ読み込みは通常の HTML 取得より相手サーバーへの負荷が
+// 大きい（HTML 本体に加えて JS 自身が発行する XHR も走る）ため、間隔を長めに取る
+const HEADLESS_REQUEST_INTERVAL_MS = 10000;
 
 export interface SourceResult {
   sourceKey: string;
@@ -126,16 +130,21 @@ async function collectUrlsFromListUrls(
 function createCollectUrlsDeps(source: Source): CollectUrlsDeps {
   let robots: RobotsRules | null = null;
   let lastAccess: number | null = null;
+  let lastHeadlessAccess: number | null = null;
+
+  async function ensureAllowed(url: string): Promise<void> {
+    if (!robots) {
+      robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
+    }
+    const path = new URL(url).pathname;
+    if (!robots.isAllowed(path)) {
+      throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
+    }
+  }
 
   return {
     async fetchAllowedHtml(url: string): Promise<string> {
-      if (!robots) {
-        robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
-      }
-      const path = new URL(url).pathname;
-      if (!robots.isAllowed(path)) {
-        throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
-      }
+      await ensureAllowed(url);
 
       if (lastAccess !== null) {
         const elapsed = Date.now() - lastAccess;
@@ -147,6 +156,24 @@ function createCollectUrlsDeps(source: Source): CollectUrlsDeps {
       const html = await fetchHtml(url);
       lastAccess = Date.now();
       return html;
+    },
+
+    async fetchAllowedViaHeadless<T>(
+      url: string,
+      matchResponse: (url: string) => boolean,
+    ): Promise<T> {
+      await ensureAllowed(url);
+
+      if (lastHeadlessAccess !== null) {
+        const elapsed = Date.now() - lastHeadlessAccess;
+        if (elapsed < HEADLESS_REQUEST_INTERVAL_MS) {
+          await sleep(HEADLESS_REQUEST_INTERVAL_MS - elapsed);
+        }
+      }
+
+      const result = await fetchJsonViaHeadless<T>(url, { matchResponse });
+      lastHeadlessAccess = Date.now();
+      return result;
     },
   };
 }

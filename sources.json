@@ -441,6 +441,15 @@
       "parser": "comici",
       "enabled": true,
       "favicon": "/favicons/rimacomiplus.png"
+    },
+    {
+      "key": "ciao",
+      "name": "ちゃおプラス",
+      "listUrls": ["https://ciao.shogakukan.co.jp/comics/search/keyword/166"],
+      "siteUrl": "https://ciao.shogakukan.co.jp/",
+      "parser": "ciao",
+      "enabled": true,
+      "favicon": "/favicons/ciao.png"
     }
   ]
 }

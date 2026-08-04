@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## リポジトリ構成（pnpm workspace）
 
 - `apps/web` — 一覧表示・投票 UI（Next.js App Router、`@opennextjs/cloudflare` で Cloudflare Workers にデプロイ）
-- `apps/batch` — 各サービスをクロールしてデータを収集するバッチ（さくら VPS 上で Docker コンテナとして ofelia（docker compose のサービスとして常駐するスケジューラ）により毎日 00:05・12:05・18:05（JST）に実行、Mackerel で監視）
+- `apps/batch` — 各サービスをクロールしてデータを収集するバッチ（さくら VPS 上で Docker コンテナとして ofelia（docker compose のサービスとして常駐するスケジューラ）により毎日 00:05・12:05・18:05（JST）に実行、監視は mackerel-agent・otelcol-mackerel も同じ compose.prod.yaml のサービスとしてコンテナで動く。本番の秘匿情報・状態はリポジトリ直下の `.env` / `./data/` に置き、clone 先のパスに依存しない構成。詳細は `docs/plans/006_デプロイ・運用.md` 参照）
 - `packages/db` — Drizzle ORM のスキーマ・マイグレーション・DB クライアント（web / batch で共有）
 - `sources.json` / `sources.schema.json` — クロール対象サービスの宣言的定義（リポジトリ直下）
 

@@ -35,6 +35,12 @@ async function collectUrls(source: Source, deps: CollectUrlsDeps): Promise<Parse
   const seen = new Set<string>();
   const items: ParsedOneshotUrl[] = [];
   for (const el of $(LIST_ITEM_SELECTOR)) {
+    // ページ下部の「よく検索されている作品」（読み切りタグに限らないサイト全体の
+    // 人気検索ランキング）は section 要素で囲われているため除外する
+    if ($(el).parents("section").length > 0) {
+      continue;
+    }
+
     const item = buildUrlItem({ source, viewerUrlRaw: $(el).attr("href") });
     if (item && !seen.has(item.viewerUrl)) {
       seen.add(item.viewerUrl);

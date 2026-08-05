@@ -11,8 +11,8 @@ describe("manga-one/viewerDetail", () => {
     const detail = extractViewerDetail($, "https://manga-one.com/manga/26349/chapter/274584");
 
     expect(detail).toEqual({
-      title: "ハートクラッシュ",
-      author: "ぱらり",
+      title: "サンプルタイトル",
+      author: "サンプル作者",
       thumbnailUrl:
         "https://app.manga-one.com/secure/1732517183/webp/chapter/274584.webp?hash=IIr-4Zm11_S1NC6x5slm0w&expires=1872374400",
       publishedAt: new Date(Date.UTC(2024, 11, 4)),

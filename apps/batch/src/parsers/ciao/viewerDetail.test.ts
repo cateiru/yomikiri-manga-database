@@ -14,8 +14,8 @@ describe("ciao/viewerDetail", () => {
     );
 
     expect(detail).toEqual({
-      title: "すきま男の夢",
-      author: "小室栄子",
+      title: "サンプル読切1",
+      author: "サンプル作者",
       thumbnailUrl:
         "https://cdn.ciao.shogakukan.co.jp/static/titles/286/episodes/7309/thumbnail.jpg",
       publishedAt: new Date(Date.UTC(2023, 7, 10)),

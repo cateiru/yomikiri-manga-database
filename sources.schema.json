@@ -54,7 +54,7 @@
         },
         "parser": {
           "type": "string",
-          "enum": ["gigaviewer", "magapoke", "comic-walker", "comici", "ciao"],
+          "enum": ["gigaviewer", "magapoke", "comic-walker", "comici", "ciao", "manga-one"],
           "description": "使用するパーサー種別"
         },
         "enabled": {

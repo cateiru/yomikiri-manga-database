@@ -8,8 +8,10 @@ import {
   updateOneshotDetail,
 } from "../db/upsert.js";
 import { log } from "../logger.js";
-import { extractViewerDetail } from "../parsers/index.js";
+import { extractViewerDetail, getParser } from "../parsers/index.js";
+import type { ParsedViewerDetail } from "../parsers/types.js";
 import { fetchHtml, HttpError, USER_AGENT } from "./fetchHtml.js";
+import { fetchRenderedHtml, HEADLESS_REQUEST_INTERVAL_MS } from "./headlessBrowser.js";
 import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
 const REQUEST_INTERVAL_MS = 1000;
@@ -67,6 +69,7 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
 
   const robotsBySource = new Map<string, RobotsRules>();
   const lastAccessBySource = new Map<string, number>();
+  const lastHeadlessAccessBySource = new Map<string, number>();
   const sourceKeys = [...queueBySource.keys()];
 
   let remaining = targetQueue.length;
@@ -93,28 +96,58 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
     result.attempted += 1;
 
     try {
-      let robots = robotsBySource.get(sourceKey);
-      if (!robots) {
-        robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
-        robotsBySource.set(sourceKey, robots);
+      let cachedRobots = robotsBySource.get(sourceKey);
+      if (!cachedRobots) {
+        cachedRobots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
+        robotsBySource.set(sourceKey, cachedRobots);
       }
+      const robots = cachedRobots;
       const path = new URL(item.viewerUrl).pathname;
       if (!robots.isAllowed(path)) {
         throw new Error(`robots.txt により ${item.viewerUrl} へのアクセスが拒否されています`);
       }
 
-      const lastAccess = lastAccessBySource.get(sourceKey);
-      if (lastAccess !== undefined) {
-        const elapsed = Date.now() - lastAccess;
-        if (elapsed < REQUEST_INTERVAL_MS) {
-          await sleep(REQUEST_INTERVAL_MS - elapsed);
+      const parser = getParser(source);
+      let detail: ParsedViewerDetail | null;
+
+      if (parser.fetchViewerDetail) {
+        detail = await parser.fetchViewerDetail(item.viewerUrl, {
+          // parser.fetchViewerDetail が呼ぶ URL ごとに robots.txt チェックと
+          // headless 用レート制限（呼び出しのたびに間隔を空ける）を行う
+          async fetchAllowedRenderedHtml(url, waitForSelector) {
+            const requestPath = new URL(url).pathname;
+            if (!robots.isAllowed(requestPath)) {
+              throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
+            }
+
+            const lastHeadlessAccess = lastHeadlessAccessBySource.get(sourceKey);
+            if (lastHeadlessAccess !== undefined) {
+              const elapsed = Date.now() - lastHeadlessAccess;
+              if (elapsed < HEADLESS_REQUEST_INTERVAL_MS) {
+                await sleep(HEADLESS_REQUEST_INTERVAL_MS - elapsed);
+              }
+            }
+
+            const html = await fetchRenderedHtml(url, { waitForSelector });
+            lastHeadlessAccessBySource.set(sourceKey, Date.now());
+            return html;
+          },
+        });
+      } else {
+        const lastAccess = lastAccessBySource.get(sourceKey);
+        if (lastAccess !== undefined) {
+          const elapsed = Date.now() - lastAccess;
+          if (elapsed < REQUEST_INTERVAL_MS) {
+            await sleep(REQUEST_INTERVAL_MS - elapsed);
+          }
         }
+
+        const html = await fetchHtml(item.viewerUrl);
+        lastAccessBySource.set(sourceKey, Date.now());
+
+        detail = extractViewerDetail(source, cheerio.load(html), item.viewerUrl);
       }
 
-      const html = await fetchHtml(item.viewerUrl);
-      lastAccessBySource.set(sourceKey, Date.now());
-
-      const detail = extractViewerDetail(source, cheerio.load(html), item.viewerUrl);
       if (detail) {
         await updateOneshotDetail(db, item.id, detail);
         result.fetched += 1;

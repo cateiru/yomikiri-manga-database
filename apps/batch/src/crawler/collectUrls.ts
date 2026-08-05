@@ -9,13 +9,14 @@ import { log } from "../logger.js";
 import { assertSupportedSources, getParser } from "../parsers/index.js";
 import type { CollectUrlsDeps, ParsedOneshotUrl } from "../parsers/types.js";
 import { fetchHtml, USER_AGENT } from "./fetchHtml.js";
-import { fetchJsonViaHeadless } from "./headlessBrowser.js";
+import {
+  fetchJsonViaHeadless,
+  fetchRenderedHtml,
+  HEADLESS_REQUEST_INTERVAL_MS,
+} from "./headlessBrowser.js";
 import { fetchRobotsRules, type RobotsRules } from "./robots.js";
 
 const REQUEST_INTERVAL_MS = 1000;
-// headless Chromium でのページ読み込みは通常の HTML 取得より相手サーバーへの負荷が
-// 大きい（HTML 本体に加えて JS 自身が発行する XHR も走る）ため、間隔を長めに取る
-const HEADLESS_REQUEST_INTERVAL_MS = 10000;
 
 export interface SourceResult {
   sourceKey: string;
@@ -174,6 +175,21 @@ function createCollectUrlsDeps(source: Source): CollectUrlsDeps {
       const result = await fetchJsonViaHeadless<T>(url, { matchResponse });
       lastHeadlessAccess = Date.now();
       return result;
+    },
+
+    async fetchAllowedRenderedHtml(url: string, waitForSelector: string): Promise<string> {
+      await ensureAllowed(url);
+
+      if (lastHeadlessAccess !== null) {
+        const elapsed = Date.now() - lastHeadlessAccess;
+        if (elapsed < HEADLESS_REQUEST_INTERVAL_MS) {
+          await sleep(HEADLESS_REQUEST_INTERVAL_MS - elapsed);
+        }
+      }
+
+      const html = await fetchRenderedHtml(url, { waitForSelector });
+      lastHeadlessAccess = Date.now();
+      return html;
     },
   };
 }

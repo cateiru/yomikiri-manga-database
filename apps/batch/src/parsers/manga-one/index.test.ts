@@ -43,6 +43,23 @@ describe("manga-one/collectUrls", () => {
     expect(fetchAllowedRenderedHtml).toHaveBeenCalledTimes(1);
   });
 
+  it("「よく検索されている作品」（section 要素で囲われた人気検索ランキング）を除外する", async () => {
+    const html = loadFixture("manga-one-search");
+    const fetchAllowedRenderedHtml = vi.fn(async () => html);
+
+    const items = await mangaOneParser.collectUrls?.(source, {
+      fetchAllowedHtml: vi.fn(),
+      fetchAllowedRenderedHtml,
+    });
+
+    expect(items).not.toContainEqual({
+      viewerUrl: "https://manga-one.com/manga/1020/chapter/357556",
+    });
+    expect(items).not.toContainEqual({
+      viewerUrl: "https://manga-one.com/manga/2245/chapter/356752",
+    });
+  });
+
   it("fetchAllowedRenderedHtml が渡されない deps では明示的にエラーになる", async () => {
     await expect(
       mangaOneParser.collectUrls?.(source, { fetchAllowedHtml: vi.fn() }),
@@ -64,7 +81,7 @@ describe("manga-one/fetchViewerDetail", () => {
       fetchAllowedRenderedHtml,
     });
 
-    expect(detail?.title).toBe("ハートクラッシュ");
+    expect(detail?.title).toBe("サンプルタイトル");
     expect(fetchAllowedRenderedHtml).toHaveBeenCalledTimes(1);
   });
 });

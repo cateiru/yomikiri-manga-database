@@ -10,6 +10,7 @@ import { assertSupportedSources, gigaviewerParser } from "./gigaviewer/index.js"
 import { extractViewerDetail as extractGigaviewerDetail } from "./gigaviewer/viewerDetail.js";
 import { magapokeParser } from "./magapoke/index.js";
 import { extractViewerDetail as extractMagapokeDetail } from "./magapoke/viewerDetail.js";
+import { mangaOneParser } from "./manga-one/index.js";
 import type { ParsedViewerDetail, Parser } from "./types.js";
 
 export { assertSupportedSources };
@@ -26,6 +27,8 @@ export function getParser(source: Source): Parser {
       return comiciParser;
     case "ciao":
       return ciaoParser;
+    case "manga-one":
+      return mangaOneParser;
   }
 }
 
@@ -45,5 +48,12 @@ export function extractViewerDetail(
       return extractComiciDetail($, viewerUrl);
     case "ciao":
       return extractCiaoDetail($, viewerUrl);
+    case "manga-one":
+      // マンガワンは静的 HTML から詳細を得られないため fetchViewerDetail
+      // （headless 経由）を使う。fetchDetails.ts は parser.fetchViewerDetail の
+      // 有無でこの関数自体を呼ばないため、誤って呼ばれた場合のみ到達する
+      throw new Error(
+        "manga-one は extractViewerDetail 未対応です（fetchViewerDetail を使用してください）",
+      );
   }
 }

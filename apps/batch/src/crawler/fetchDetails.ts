@@ -96,11 +96,12 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
     result.attempted += 1;
 
     try {
-      let robots = robotsBySource.get(sourceKey);
-      if (!robots) {
-        robots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
-        robotsBySource.set(sourceKey, robots);
+      let cachedRobots = robotsBySource.get(sourceKey);
+      if (!cachedRobots) {
+        cachedRobots = await fetchRobotsRules(source.siteUrl, USER_AGENT);
+        robotsBySource.set(sourceKey, cachedRobots);
       }
+      const robots = cachedRobots;
       const path = new URL(item.viewerUrl).pathname;
       if (!robots.isAllowed(path)) {
         throw new Error(`robots.txt により ${item.viewerUrl} へのアクセスが拒否されています`);
@@ -110,19 +111,28 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
       let detail: ParsedViewerDetail | null;
 
       if (parser.fetchViewerDetail) {
-        const lastHeadlessAccess = lastHeadlessAccessBySource.get(sourceKey);
-        if (lastHeadlessAccess !== undefined) {
-          const elapsed = Date.now() - lastHeadlessAccess;
-          if (elapsed < HEADLESS_REQUEST_INTERVAL_MS) {
-            await sleep(HEADLESS_REQUEST_INTERVAL_MS - elapsed);
-          }
-        }
-
         detail = await parser.fetchViewerDetail(item.viewerUrl, {
-          fetchAllowedRenderedHtml: (url, waitForSelector) =>
-            fetchRenderedHtml(url, { waitForSelector }),
+          // parser.fetchViewerDetail が呼ぶ URL ごとに robots.txt チェックと
+          // headless 用レート制限（呼び出しのたびに間隔を空ける）を行う
+          async fetchAllowedRenderedHtml(url, waitForSelector) {
+            const requestPath = new URL(url).pathname;
+            if (!robots.isAllowed(requestPath)) {
+              throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
+            }
+
+            const lastHeadlessAccess = lastHeadlessAccessBySource.get(sourceKey);
+            if (lastHeadlessAccess !== undefined) {
+              const elapsed = Date.now() - lastHeadlessAccess;
+              if (elapsed < HEADLESS_REQUEST_INTERVAL_MS) {
+                await sleep(HEADLESS_REQUEST_INTERVAL_MS - elapsed);
+              }
+            }
+
+            const html = await fetchRenderedHtml(url, { waitForSelector });
+            lastHeadlessAccessBySource.set(sourceKey, Date.now());
+            return html;
+          },
         });
-        lastHeadlessAccessBySource.set(sourceKey, Date.now());
       } else {
         const lastAccess = lastAccessBySource.get(sourceKey);
         if (lastAccess !== undefined) {

@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { USER_AGENT } from "./fetchHtml.js";
+import { HttpError, USER_AGENT } from "./fetchHtml.js";
 
 // headless Chromium でのページ読み込みは通常の HTML 取得より相手サーバーへの負荷が
 // 大きい（HTML 本体に加えて JS 自身が発行する XHR も走る）ため、間隔を長めに取る。
@@ -79,7 +79,20 @@ export async function fetchRenderedHtml(
       return route.continue();
     });
 
-    await page.goto(url, { waitUntil: "networkidle", timeout: options.timeoutMs ?? 30000 });
+    // "networkidle" は SPA が発行し続ける計測用ビーコン等で発火しないことがあるため、
+    // fetchJsonViaHeadless と同様に "domcontentloaded" まで待った上で
+    // waitForSelector で描画完了を判定する
+    const response = await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: options.timeoutMs ?? 30000,
+    });
+    if (!response) {
+      throw new Error(`${url} への遷移でレスポンスを取得できませんでした`);
+    }
+    if (!response.ok()) {
+      throw new HttpError(response.status(), response.statusText());
+    }
+
     await page.waitForSelector(options.waitForSelector, { timeout: options.timeoutMs ?? 20000 });
 
     return await page.content();

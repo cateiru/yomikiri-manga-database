@@ -26,7 +26,10 @@ export default async function AboutPage() {
     getLatestDataUpdatedAt(),
     getOneshotCountsBySource(),
   ]);
-  const sources = listSources().filter((source) => (sourceCounts.get(source.key) ?? 0) > 0);
+  const collator = new Intl.Collator("ja");
+  const sources = listSources()
+    .filter((source) => (sourceCounts.get(source.key) ?? 0) > 0)
+    .sort((a, b) => collator.compare(a.name, b.name));
 
   return (
     <main className={styles.main}>

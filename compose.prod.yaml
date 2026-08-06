@@ -63,7 +63,12 @@ services:
       - ${PWD}:${PWD}
     labels:
       ofelia.enabled: "true"
-      ofelia.job-local.yomikiri-batch.schedule: "5 0,12,18 * * *"
+      # mcuadros/ofelia 0.3.x（robfig/cron ベース）は秒(seconds)フィールドが必須で、
+      # 5 フィールド（分 時 日 月 曜日）ではなく 6 フィールド（秒 分 時 日 月 曜日）で解釈される。
+      # 5 フィールドで書くと先頭が秒・次が分として解釈され、意図せず「毎時 X 分 Y 秒」
+      # （1 日 3 回のつもりが 1 時間に 3 回 = 1 日 72 回）実行される事故を実機で起こしたため、
+      # 必ず秒フィールドを明示すること（実機検証で確認済み）。
+      ofelia.job-local.yomikiri-batch.schedule: "0 5 0,12,18 * * *"
       ofelia.job-local.yomikiri-batch.command: "${PWD}/deploy/bin/run-batch.sh"
 
   # ホスト監視 + バッチ死活監視の check プラグイン（deploy/mackerel/yomikiri-batch-checks.conf）。

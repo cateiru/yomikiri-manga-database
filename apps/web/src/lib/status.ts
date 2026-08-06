@@ -33,12 +33,14 @@ async function getSourceCounts(db: Db): Promise<SourceStatusCount[]> {
 
   const countsByKey = new Map(rows.map((row) => [row.sourceKey, Number(row.count)]));
 
-  return listSources().map((source) => ({
-    key: source.key,
-    name: source.name,
-    favicon: source.favicon,
-    count: countsByKey.get(source.key) ?? 0,
-  }));
+  return listSources()
+    .map((source) => ({
+      key: source.key,
+      name: source.name,
+      favicon: source.favicon,
+      count: countsByKey.get(source.key) ?? 0,
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 async function getGenreCounts(db: Db): Promise<GenreStatusCount[]> {

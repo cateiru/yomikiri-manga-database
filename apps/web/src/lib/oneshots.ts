@@ -11,6 +11,7 @@ import {
   isNotNull,
   isNull,
   lt,
+  ne,
   or,
   type SQL,
   sql,
@@ -281,6 +282,59 @@ export async function getOneshotsByIds(ids: number[]): Promise<OneshotListItem[]
     .where(and(inArray(oneshots.id, ids), isNotNull(oneshots.title)));
 
   return attachGenreBadges(db, rows);
+}
+
+export const SAME_SOURCE_RECOMMENDATION_COUNT = 6;
+
+/** 詳細ページの「同じサイトのほかの作品」欄用。指定作品自身は除外する */
+export async function getOneshotsBySource(
+  sourceKey: string,
+  excludeId: number,
+  limit: number = SAME_SOURCE_RECOMMENDATION_COUNT,
+): Promise<OneshotListItem[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: oneshots.id,
+      title: oneshots.title,
+      author: oneshots.author,
+      thumbnailUrl: oneshots.thumbnailUrl,
+      viewerUrl: oneshots.viewerUrl,
+      sourceKey: oneshots.sourceKey,
+      publishedAt: oneshots.publishedAt,
+      firstSeenAt: oneshots.firstSeenAt,
+    })
+    .from(oneshots)
+    .where(
+      and(eq(oneshots.sourceKey, sourceKey), isNotNull(oneshots.title), ne(oneshots.id, excludeId)),
+    )
+    .orderBy(sql`${oneshots.publishedAt} desc nulls last`, asc(oneshots.title), asc(oneshots.id))
+    .limit(limit);
+
+  return attachGenreBadges(db, rows);
+}
+
+export interface OneshotSitemapEntry {
+  id: number;
+  /** 更新頻度の高い last_seen_at ではなく、掲載日時（無ければ初回検知日時）を使う */
+  lastModified: Date;
+}
+
+export async function getOneshotSitemapEntries(): Promise<OneshotSitemapEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: oneshots.id,
+      publishedAt: oneshots.publishedAt,
+      firstSeenAt: oneshots.firstSeenAt,
+    })
+    .from(oneshots)
+    .where(isNotNull(oneshots.title));
+
+  return rows.map((row) => ({
+    id: row.id,
+    lastModified: row.publishedAt ?? row.firstSeenAt,
+  }));
 }
 
 export async function getOneshotById(id: number): Promise<OneshotListItem | null> {

@@ -1,0 +1,160 @@
+.main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .article {
+    flex-direction: row;
+    gap: var(--space-6);
+  }
+}
+
+.thumbnailFrame {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  overflow: hidden;
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-ink);
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .thumbnailFrame {
+    width: 280px;
+    align-self: flex-start;
+  }
+}
+
+/* サムネイルにホバーした際、「読む」ボタンも hover 相当の見た目に連動させる */
+.article:has([data-thumbnail-link]:hover) [data-read-button] {
+  box-shadow: var(--shadow-lg);
+  transform: translate(-2px, -2px);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.author {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-70);
+}
+
+.source {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-70);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.favicon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.sectionHeading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-ink-70);
+}
+
+.genres {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+
+.genreLinks {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.genreLink {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-ink);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-ink);
+}
+
+.genreLink:hover {
+  background: var(--color-ink-5);
+}
+
+.recommendations {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.recommendationsHeading {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.recommendationsGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.recommendationsGrid > li {
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .recommendationsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

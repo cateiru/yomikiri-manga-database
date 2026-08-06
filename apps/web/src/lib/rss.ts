@@ -4,6 +4,10 @@ const SITE_URL = "https://yomikiri-manga.com";
 const SITE_TITLE = "読み切り漫画データベース";
 const SITE_DESCRIPTION = "各漫画配信サービスの読み切り漫画を横断的に一覧できるサービス";
 
+function seriesPageUrl(item: OneshotListItem): string {
+  return `${SITE_URL}/series/${item.id}`;
+}
+
 function escapeXml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -31,7 +35,7 @@ function buildItemXml(item: OneshotListItem): string {
   return [
     "<item>",
     `<title>${escapeXml(item.title)}</title>`,
-    `<link>${escapeXml(item.viewerUrl)}</link>`,
+    `<link>${escapeXml(seriesPageUrl(item))}</link>`,
     `<guid isPermaLink="false">${escapeXml(item.viewerUrl)}</guid>`,
     `<pubDate>${pubDate}</pubDate>`,
     description,

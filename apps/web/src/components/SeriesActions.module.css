@@ -1,0 +1,54 @@
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-decoration: none;
+  border: var(--border-width) solid var(--color-ink);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.primary {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translate(-2px, -2px);
+}
+
+.primary:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.secondary {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translate(-2px, -2px);
+}
+
+.secondary:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}

@@ -1,12 +1,15 @@
 import type { MetadataRoute } from "next";
-import { getLatestDataUpdatedAt } from "@/lib/oneshots";
+import { getLatestDataUpdatedAt, getOneshotSitemapEntries } from "@/lib/oneshots";
 
 const SITE_URL = "https://yomikiri-manga.com";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const lastModified = (await getLatestDataUpdatedAt()) ?? undefined;
+  const [lastModified, seriesEntries] = await Promise.all([
+    getLatestDataUpdatedAt().then((value) => value ?? undefined),
+    getOneshotSitemapEntries(),
+  ]);
 
   return [
     {
@@ -36,5 +39,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "yearly",
       priority: 0.1,
     },
+    ...seriesEntries.map((entry): MetadataRoute.Sitemap[number] => ({
+      url: `${SITE_URL}/series/${entry.id}`,
+      lastModified: entry.lastModified,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    })),
   ];
 }

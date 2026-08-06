@@ -78,11 +78,14 @@ services:
     # hostname は明示的に固定しない（Docker が割り当てるコンテナ ID 風の名前になり、
     # Mackerel 上の表示名としては読みにくくなるが許容する）。ホストの同一性は hostname では
     # なく ./data/lib/mackerel-agent に永続化される host id で担保している。
-    env_file:
-      # apikey=... の1行のみ（Docker公式イメージの startup.sh が読む環境変数名は
-      # 小文字の "apikey"。otelcol-mackerel 側の "MACKEREL_APIKEY" とは別名なので注意）。
-      - .env
+    # env_file: .env は使わない（.env には batch 用の DATABASE_URL 等も入っており、
+    # 監視コンテナに本来不要な秘匿情報まで渡ってしまうため）。トップレベルの .env は
+    # docker compose の ${VAR} 変数展開にも自動で使われるため、必要な変数だけを
+    # environment: で明示的に指定して絞り込む。
     environment:
+      # Docker公式イメージの startup.sh が読む環境変数名は小文字の "apikey"
+      # （otelcol-mackerel 側の "MACKEREL_APIKEY" とは別名なので注意）。
+      apikey: ${apikey}
       # startup.sh が sed でこの内容を mackerel-agent.conf の include 行に書き込む。
       # include 先の [plugin.checks.*] も mackerel-agent 側でマージされる
       # （mackerelio/mackerel-agent の config.go の includeConfigFile が
@@ -111,11 +114,15 @@ services:
   # バッチログ（/var/log/yomikiri/batch.log）を Mackerel の新ログ機能（β）に転送する
   # OTel Collector。設定は deploy/mackerel/otelcol-mackerel-config.yaml を参照。
   otelcol-mackerel:
-    image: mackerel/otelcol-mackerel:latest
+    # latest は使わない。イメージの更新で設定互換性が突然壊れるリスクがあるため、
+    # バージョンを固定して更新手順（deploy.sh 実行前にここを書き換える）に組み込む。
+    image: mackerel/otelcol-mackerel:0.15.1
     restart: unless-stopped
-    env_file:
-      # MACKEREL_APIKEY=... の1行のみ。
-      - .env
+    # env_file: .env は使わない（mackerel-agent と同じ理由。.env 全体を読むと
+    # DATABASE_URL 等の不要な秘匿情報まで渡ってしまうため、必要な変数だけを
+    # environment: の ${VAR} 展開で絞り込む）。
+    environment:
+      MACKEREL_APIKEY: ${MACKEREL_APIKEY}
     # イメージの ENTRYPOINT は /usr/bin/otelcol-mackerel 固定なので CMD だけ上書きする。
     # 公式のカスタム設定手順（README "Advanced Usage" 参照）に倣い、
     # /home/nonroot/config.yaml（イメージが distroless nonroot ベースのホームディレクトリ）に

@@ -3,7 +3,7 @@
 # /home/nonroot/config.yaml として bind mount して使う。
 #
 # MACKEREL_APIKEY 等の秘匿情報はここには書かない
-# （compose.prod.yaml の otelcol-mackerel サービスの env_file 側で管理する）。
+# （compose.prod.yaml の otelcol-mackerel サービスの environment 側で管理する）。
 #
 # バッチは ofelia (job-local) の run-batch.sh から起動されるため systemd unit として
 # 動かない。journald にはログが乗らないため、run-batch.sh が標準出力・標準エラーを
@@ -53,9 +53,9 @@ processors:
 
 exporters:
   mackerel_otlp: {}
-  # APIキーは compose.prod.yaml の otelcol-mackerel サービスの env_file
-  # （/etc/yomikiri/otelcol-mackerel.env）で渡す MACKEREL_APIKEY 環境変数から
-  # exporter が読む。
+  # APIキーは compose.prod.yaml の otelcol-mackerel サービスの environment
+  # （リポジトリ直下の .env から MACKEREL_APIKEY だけを ${VAR} 展開で渡す）で
+  # 設定する MACKEREL_APIKEY 環境変数から exporter が読む。
 
 service:
   pipelines:

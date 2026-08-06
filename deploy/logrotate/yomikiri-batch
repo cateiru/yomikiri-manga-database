@@ -1,0 +1,22 @@
+# /etc/logrotate.d/yomikiri-batch にコピーして使う
+# （docs/plans/006_デプロイ・運用.md のセットアップ手順を参照）。
+# ログの実体はクローン先の ./data/log/yomikiri/batch.log（$PWD 起点）になるため、
+# 下記の /var/log/yomikiri/batch.log はテンプレートのプレースホルダー。
+# セットアップ時に sed でクローン先の絶対パスへ置換してから配置する。
+#
+# copytruncate は使わない。run-batch.sh は毎回 `>>` でファイルを開き直す短命プロセスで
+# ファイルディスクリプタを長時間保持しないため、通常の rename ベース rotate（デフォルト）で
+# otelcol-mackerel の filelog receiver にとって安全（copytruncate はトランケート時に
+# receiver の読み取り位置がずれるリスクがある）。
+/var/log/yomikiri/batch.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    # otelcol-mackerel コンテナが distroless nonroot（UID/GID 65532）で読むため、
+    # rotate 後の新規ファイルも world-readable であることを明示する
+    # （run-batch.sh 側の umask 022 と合わせて環境依存を無くす）。
+    create 0644 root root
+}

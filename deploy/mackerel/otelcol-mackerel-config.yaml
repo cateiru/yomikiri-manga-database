@@ -1,46 +1,49 @@
 # otelcol-mackerel（MDOT Collector）のログ収集パイプライン定義。
-# VPS 上の /etc/otelcol-mackerel/config.yaml にコピーして使う
-# （docs/plans/006_デプロイ・運用.md のセットアップ手順を参照）。
+# 本番は mackerel/otelcol-mackerel イメージ（compose.prod.yaml の otelcol-mackerel サービス）に
+# /home/nonroot/config.yaml として bind mount して使う。
 #
 # MACKEREL_APIKEY 等の秘匿情報はここには書かない
-# （/etc/otelcol-mackerel/otelcol-mackerel.conf 側で管理する）。
+# （compose.prod.yaml の otelcol-mackerel サービスの environment 側で管理する）。
 #
+# バッチは ofelia (job-local) の run-batch.sh から起動されるため systemd unit として
+# 動かない。journald にはログが乗らないため、run-batch.sh が標準出力・標準エラーを
+# リダイレクトしている /var/log/yomikiri/batch.log を filelog receiver で直接読む。
+# 対象ファイルを1本に限定することで、旧 journald 設定の units フィルタと同等の
+# 「コスト事故防止（無料枠 月1GB の超過防止）」を確定的に維持する。
+#
+# file_storage extension（読み取りカーソルの永続化）は使わない。mackerel/otelcol-mackerel
+# ディストリビューションにこのコンポーネントが含まれておらず
+# （実際に起動して "unknown type: file_storage" エラーで確認済み。upstream の
+# manifest.yaml にも extensions セクションが無い）、代わりに storage 未指定のまま動かす。
+# 影響は Collector 再起動中に出力されたログが再起動後に再読込されない
+# （`start_at: end` のため）ことのみで、致命的ではないため許容する。
 
 receivers:
-  journald:
-    # yomikiri-batch.service のログのみに限定する（コスト事故防止の要）。
-    # 誤って外すと sshd / docker / mackerel-agent 自身等 VPS 全体の journal を
-    # 取り込んでしまい、無料枠（月1GB）を容易に超過し得る。
-    units:
-      - yomikiri-batch.service
+  filelog:
+    include:
+      - /var/log/yomikiri/batch.log
     start_at: end # 導入時点までの過去ログを一括取り込みしない
 
 processors:
   # Mackerel はログを service.name（+ service.namespace）リソース属性で識別するため、
-  # journald レシーバーが自動設定しない service.name をここで明示的に付与する。
+  # filelog レシーバーが自動設定しない service.name をここで明示的に付与する。
   # 未設定のままだと Mackerel 側の「サービス名」表示が unknown_service になる。
   resource:
     attributes:
       - key: service.name
         value: "yomikiri-batch"
         action: upsert
-  # journald レシーバーは body を文字列ではなく構造化された Map として渡してくる
-  # （MESSAGE/PRIORITY/_SYSTEMD_UNIT 等がキーになったマップ）。まず body["MESSAGE"] を
-  # 取り出して body を文字列に差し替える。apps/batch/src/logger.ts が出力する行では
-  # この MESSAGE の中身がそのまま1回JSONエンコードされた文字列になっているため、
-  # それを ParseJSON して level/message 等を取り出す。level を severity_text /
-  # severity_number にも反映させる（未設定だと Mackerel 側のログレベル表示が
-  # UNSPECIFIED のままになる）。apps/batch/src/logger.ts が出力するレベルは
-  # info/warn/error の3種類のみ。
-  # systemd 自身が出すユニットのライフサイクルメッセージ（JSONでない）は
-  # ParseJSON 側の条件が false になり body がプレーンテキストのまま残るだけで、
-  # パイプライン自体は止まらない（error_mode: ignore）。
+  # filelog レシーバーの body は apps/batch/src/logger.ts が出力する JSON 行の文字列
+  # そのもの（journald の MESSAGE ラップが無いため、旧設定にあった
+  # body["MESSAGE"] 展開ステップは不要）。ParseJSON して level/message 等を取り出し、
+  # level を severity_text / severity_number にも反映させる（未設定だと Mackerel 側の
+  # ログレベル表示が UNSPECIFIED のままになる）。apps/batch/src/logger.ts が出力する
+  # レベルは info/warn/error の3種類のみ。
   transform:
     error_mode: ignore # JSON以外の行が来てもパイプラインを止めない
     log_statements:
       - context: log
         statements:
-          - 'set(body, body["MESSAGE"]) where IsMap(body) and body["MESSAGE"] != nil'
           - 'merge_maps(attributes, ParseJSON(body), "upsert") where IsString(body) and IsMatch(body, "^\\{")'
           - 'set(severity_text, attributes["level"]) where attributes["level"] != nil'
           - 'set(severity_number, SEVERITY_NUMBER_INFO) where severity_text == "info"'
@@ -50,12 +53,13 @@ processors:
 
 exporters:
   mackerel_otlp: {}
-  # APIキーは /etc/otelcol-mackerel/otelcol-mackerel.conf の
-  # MACKEREL_APIKEY 環境変数から exporter が読む。
+  # APIキーは compose.prod.yaml の otelcol-mackerel サービスの environment
+  # （リポジトリ直下の .env から MACKEREL_APIKEY だけを ${VAR} 展開で渡す）で
+  # 設定する MACKEREL_APIKEY 環境変数から exporter が読む。
 
 service:
   pipelines:
     logs:
-      receivers: [journald]
+      receivers: [filelog]
       processors: [resource, transform, batch]
       exporters: [mackerel_otlp]

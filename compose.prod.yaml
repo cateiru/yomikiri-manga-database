@@ -1,10 +1,135 @@
+# プロジェクト名を "app" に固定する。`-p app` を付けずに `docker compose up` されても
+# 常に同じプロジェクト名になるようにするため（ofelia の --docker-filter
+# label=com.docker.compose.project=app や、run-batch.sh 等の DooD 越しの `docker compose -p app`
+# 呼び出しと一致させる必要がある。`-p` 明示時はこの name より優先されるため後方互換）。
+name: app
 services:
-  # 本番バッチ。systemd timer から `docker compose -f compose.prod.yaml run --rm batch`
-  # として都度起動・都度破棄する（restart は指定しない。常駐させると
-  # 正常終了のたびに再起動してしまい「6 時間ごと」の実行間隔と両立しないため）
+  # 本番バッチ。ofelia (job-local) から
+  # `docker compose -p app -f compose.prod.yaml run --rm batch` として都度起動・都度破棄する
+  # （restart は指定しない。常駐させると正常終了のたびに再起動してしまい
+  # 「00:05・12:05・18:05 の 1 日 3 回」の実行スケジュールと両立しないため）。
+  # `up -d` 実行時にこのサービスだけが常駐・自動起動してしまわないよう profiles で縛る
+  # （`docker compose run` はサービスに割り当てられた profile を自動的に有効化するため
+  # profiles を付けても run 自体の挙動は変わらない）
   batch:
     build:
       context: .
       dockerfile: apps/batch/Dockerfile
+    env_file:
+      - .env
+    profiles: ["batch"]
+
+  # VPS 側スケジューラ本体。`docker compose up -d` でこのサービスだけが常駐し、
+  # labels で定義したジョブ（job-local）を cron ライクなスケジュールで実行する。
+  # batch コンテナ自体ではなく「batch を起動するコマンド（run-batch.sh）」を実行する役割。
+  ofelia:
+    build:
+      context: .
+      dockerfile: deploy/ofelia/Dockerfile
+    # mcuadros/ofelia のデフォルト CMD は `daemon --config /etc/ofelia/config.ini` で、
+    # 存在しない config.ini を探しに行って起動に失敗する。labels（job-local）から設定を
+    # 読ませるには --docker が必須。
+    # --docker-filter を付けないと、同一 Docker ホスト上の無関係な別プロジェクトの
+    # `ofelia.enabled=true` コンテナのジョブまで拾ってしまう（実機検証で確認済み。
+    # 停止済みの他プロジェクトのジョブが動き続ける現象も観測した）。
+    # このプロジェクトは常にプロジェクト名 "app"（ファイル冒頭の name: app、あるいは
+    # 明示された -p app）で起動する前提のため、com.docker.compose.project ラベルで
+    # 自プロジェクトのコンテナだけに絞り込む。値が変わる場合は name: app とここの両方を
+    # 揃えて書き換えること（自動で同期される仕組みは無い）。
+    command: ["daemon", "--docker", "--docker-filter", "label=com.docker.compose.project=app"]
+    restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      # ofelia (robfig/cron) は CRON_TZ= prefix への対応が確認できなかったため、
+      # schedule 文字列側では指定せず、コンテナのローカルタイムゾーンを介して反映する
+      # （ofelia のベースイメージ alpine には tzdata が入っているため機能する）
+      TZ: Asia/Tokyo
+      # run-batch.sh（job-local で実行されるシェルスクリプト）に PWD を継承させるため
+      # 明示的に設定する。ofelia の LocalJob は os/exec で子プロセスを起動するだけで、
+      # Dir を設定しても PWD 環境変数は自動エクスポートされないため（実機検証で確認済み）、
+      # ここで明示しないと run-batch.sh 内の `docker compose -f "$PWD/..."` が空文字列
+      # 展開になってしまう。
+      PWD: ${PWD}
+    working_dir: ${PWD}
+    volumes:
+      # ofelia コンテナ内の docker CLI からホストの Docker デーモンを操作するために必要
+      - /var/run/docker.sock:/var/run/docker.sock
+      # リポジトリ全体（= compose.prod.yaml・run-batch.sh 自体）をホストと同一の絶対パスで
+      # bind mount する。ofelia コンテナ内から叩く
+      # `docker compose -f "$PWD/compose.prod.yaml" run --rm batch` は Docker-outside-of-Docker
+      # 越しにホストの Docker デーモンへ直接そのパス文字列を渡すため、コンテナ内のマウント先と
+      # ホストの実パスが一致していないと解決に失敗する。${PWD} を使うことで、リポジトリを
+      # どこに clone しても（compose up を実行したディレクトリがそのまま）このパスが自動的に
+      # 一致する（symlink 経由の別パスからビルドしてタグがズレる事故も併せて防げる）。
+      - ${PWD}:${PWD}
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-local.yomikiri-batch.schedule: "5 0,12,18 * * *"
+      ofelia.job-local.yomikiri-batch.command: "${PWD}/deploy/bin/run-batch.sh"
+
+  # ホスト監視 + バッチ死活監視の check プラグイン（deploy/mackerel/yomikiri-batch-checks.conf）。
+  # 公式イメージ（debian ベース）に docker CLI + compose プラグインを足しただけの
+  # deploy/mackerel-agent/Dockerfile でビルドする（yomikiri-ofelia-service チェックが
+  # `docker compose ps` を叩くため）。
+  mackerel-agent:
+    build:
+      context: .
+      dockerfile: deploy/mackerel-agent/Dockerfile
+    restart: unless-stopped
+    # hostname は明示的に固定しない（Docker が割り当てるコンテナ ID 風の名前になり、
+    # Mackerel 上の表示名としては読みにくくなるが許容する）。ホストの同一性は hostname では
+    # なく ./data/lib/mackerel-agent に永続化される host id で担保している。
+    # env_file: .env は使わない（.env には batch 用の DATABASE_URL 等も入っており、
+    # 監視コンテナに本来不要な秘匿情報まで渡ってしまうため）。トップレベルの .env は
+    # docker compose の ${VAR} 変数展開にも自動で使われるため、必要な変数だけを
+    # environment: で明示的に指定して絞り込む。
+    environment:
+      # Docker公式イメージの startup.sh が読む環境変数名は小文字の "apikey"
+      # （otelcol-mackerel 側の "MACKEREL_APIKEY" とは別名なので注意）。
+      apikey: ${apikey}
+      # startup.sh が sed でこの内容を mackerel-agent.conf の include 行に書き込む。
+      # include 先の [plugin.checks.*] も mackerel-agent 側でマージされる
+      # （mackerelio/mackerel-agent の config.go の includeConfigFile が
+      # setEachPlugins を呼び直すため。「conf.d からは読み込まれない」という情報は誤り）。
+      include: /etc/mackerel-agent/conf.d/*.conf
+      # yomikiri-ofelia-service チェック（`docker compose -f "$PWD/compose.prod.yaml" ps ofelia`）が
+      # ofelia と同じ理由で PWD を必要とするため設定する。check プラグインのサブプロセスには
+      # mackerel-agent 自身の環境変数がそのまま継承される（cmdutil.RunCommandArgsContext の
+      # `cmd.Env = append(os.Environ(), opt.Env...)` で確認済み）。
+      PWD: ${PWD}
+    # working_dir を明示しないと、check プラグインが `sh -c` 経由で起動する際に
+    # シェルが実際のカレントディレクトリ（コンテナのデフォルトの `/`）で PWD 環境変数を
+    # 上書きしてしまい、上記の environment: PWD が無視される（実機検証で確認済み）。
+    working_dir: ${PWD}
+    volumes:
+      # mackerel-plugin-docker 等のためではなく、yomikiri-ofelia-service チェックが
+      # `docker compose ps` を実行するために必要。
+      - /var/run/docker.sock:/var/run/docker.sock
+      # ofelia と同じ理由（DooD 越しのパス一致）でリポジトリ全体を ${PWD} でマウントする。
+      - ${PWD}:${PWD}
+      # host id（id-*.json）の永続化先。DooD 越しにホストへパスを渡す必要のないマウントなので
+      # （mackerel-agent コンテナ内で完結する）相対パスで問題ない。
+      - ./data/lib/mackerel-agent:/var/lib/mackerel-agent
+      - ./deploy/mackerel/yomikiri-batch-checks.conf:/etc/mackerel-agent/conf.d/yomikiri-batch-checks.conf:ro
+
+  # バッチログ（/var/log/yomikiri/batch.log）を Mackerel の新ログ機能（β）に転送する
+  # OTel Collector。設定は deploy/mackerel/otelcol-mackerel-config.yaml を参照。
+  otelcol-mackerel:
+    # latest は使わない。イメージの更新で設定互換性が突然壊れるリスクがあるため、
+    # バージョンを固定して更新手順（deploy.sh 実行前にここを書き換える）に組み込む。
+    image: mackerel/otelcol-mackerel:0.15.1
+    restart: unless-stopped
+    # env_file: .env は使わない（mackerel-agent と同じ理由。.env 全体を読むと
+    # DATABASE_URL 等の不要な秘匿情報まで渡ってしまうため、必要な変数だけを
+    # environment: の ${VAR} 展開で絞り込む）。
+    environment:
+      MACKEREL_APIKEY: ${MACKEREL_APIKEY}
+    # イメージの ENTRYPOINT は /usr/bin/otelcol-mackerel 固定なので CMD だけ上書きする。
+    # 公式のカスタム設定手順（README "Advanced Usage" 参照）に倣い、
+    # /home/nonroot/config.yaml（イメージが distroless nonroot ベースのホームディレクトリ）に
+    # bind mount する。
+    command: ["--config", "/home/nonroot/config.yaml"]
+    volumes:
+      - ./deploy/mackerel/otelcol-mackerel-config.yaml:/home/nonroot/config.yaml:ro
+      # DooD を使わないサービスなので相対パスで問題ない（run-batch.sh が書き込む
+      # ./data/log/yomikiri/batch.log をコンテナ内の固定パス /var/log/yomikiri に見せる）。
+      - ./data/log/yomikiri:/var/log/yomikiri:ro

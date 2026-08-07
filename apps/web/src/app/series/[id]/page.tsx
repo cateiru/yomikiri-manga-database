@@ -142,6 +142,9 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
               </li>
             ))}
           </ul>
+          <Link className={styles.exploreLink} href="/">
+            他の読み切り漫画を探す
+          </Link>
         </section>
       ) : null}
     </main>

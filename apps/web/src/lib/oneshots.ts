@@ -11,7 +11,6 @@ import {
   isNotNull,
   isNull,
   lt,
-  ne,
   or,
   type SQL,
   sql,
@@ -96,6 +95,25 @@ function buildCursorCondition(cursor: OneshotsCursor | null): SQL | undefined {
     lt(oneshots.publishedAt, cursorPublishedAt),
     and(eq(oneshots.publishedAt, cursorPublishedAt), titleTiebreak),
     isNull(oneshots.publishedAt),
+  );
+}
+
+// buildCursorCondition の逆方向（cursor よりソート順で手前＝新しい側）を返す条件。
+// 「前後3作品ずつ」の取得で、cursor（該当作品）より新しい側を辿るために使う
+function buildBeforeCursorCondition(cursor: OneshotsCursor): SQL | undefined {
+  const titleTiebreak = or(
+    lt(oneshots.title, cursor.title),
+    and(eq(oneshots.title, cursor.title), lt(oneshots.id, cursor.id)),
+  );
+
+  if (cursor.publishedAt === null) {
+    return or(isNotNull(oneshots.publishedAt), and(isNull(oneshots.publishedAt), titleTiebreak));
+  }
+
+  const cursorPublishedAt = sql`${cursor.publishedAt}::timestamptz`;
+  return or(
+    gt(oneshots.publishedAt, cursorPublishedAt),
+    and(eq(oneshots.publishedAt, cursorPublishedAt), titleTiebreak),
   );
 }
 
@@ -286,32 +304,78 @@ export async function getOneshotsByIds(ids: number[]): Promise<OneshotListItem[]
 
 export const SAME_SOURCE_RECOMMENDATION_COUNT = 6;
 
-/** 詳細ページの「同じサイトのほかの作品」欄用。指定作品自身は除外する */
-export async function getOneshotsBySource(
+const sameSourceRecommendationColumns = {
+  id: oneshots.id,
+  title: oneshots.title,
+  author: oneshots.author,
+  thumbnailUrl: oneshots.thumbnailUrl,
+  viewerUrl: oneshots.viewerUrl,
+  sourceKey: oneshots.sourceKey,
+  publishedAt: oneshots.publishedAt,
+  firstSeenAt: oneshots.firstSeenAt,
+};
+
+/**
+ * 詳細ページの「同じサイトのほかの作品」欄用。指定作品（cursor）のソート順での位置を基準に、
+ * 新しい側（before）・古い側（after）から半数ずつ取得する。片側が不足する場合はもう片側で埋め合わせて
+ * 合計 totalCount 件に近づける
+ */
+export async function getOneshotsAroundInSource(
   sourceKey: string,
-  excludeId: number,
-  limit: number = SAME_SOURCE_RECOMMENDATION_COUNT,
+  cursor: OneshotsCursor,
+  totalCount: number = SAME_SOURCE_RECOMMENDATION_COUNT,
 ): Promise<OneshotListItem[]> {
   const db = await getDb();
-  const rows = await db
-    .select({
-      id: oneshots.id,
-      title: oneshots.title,
-      author: oneshots.author,
-      thumbnailUrl: oneshots.thumbnailUrl,
-      viewerUrl: oneshots.viewerUrl,
-      sourceKey: oneshots.sourceKey,
-      publishedAt: oneshots.publishedAt,
-      firstSeenAt: oneshots.firstSeenAt,
-    })
-    .from(oneshots)
-    .where(
-      and(eq(oneshots.sourceKey, sourceKey), isNotNull(oneshots.title), ne(oneshots.id, excludeId)),
-    )
-    .orderBy(sql`${oneshots.publishedAt} desc nulls last`, asc(oneshots.title), asc(oneshots.id))
-    .limit(limit);
+  const beforeCount = Math.floor(totalCount / 2);
+  const afterCount = totalCount - beforeCount;
 
-  return attachGenreBadges(db, rows);
+  const fetchBefore = async (limit: number) => {
+    const rows = await db
+      .select(sameSourceRecommendationColumns)
+      .from(oneshots)
+      .where(
+        and(
+          eq(oneshots.sourceKey, sourceKey),
+          isNotNull(oneshots.title),
+          buildBeforeCursorCondition(cursor),
+        ),
+      )
+      .orderBy(
+        sql`${oneshots.publishedAt} asc nulls first`,
+        desc(oneshots.title),
+        desc(oneshots.id),
+      )
+      .limit(limit);
+    return rows.reverse();
+  };
+
+  const fetchAfter = async (limit: number) => {
+    return db
+      .select(sameSourceRecommendationColumns)
+      .from(oneshots)
+      .where(
+        and(
+          eq(oneshots.sourceKey, sourceKey),
+          isNotNull(oneshots.title),
+          buildCursorCondition(cursor),
+        ),
+      )
+      .orderBy(sql`${oneshots.publishedAt} desc nulls last`, asc(oneshots.title), asc(oneshots.id))
+      .limit(limit);
+  };
+
+  let [beforeRows, afterRows] = await Promise.all([
+    fetchBefore(beforeCount),
+    fetchAfter(afterCount),
+  ]);
+
+  if (beforeRows.length < beforeCount && afterRows.length === afterCount) {
+    afterRows = await fetchAfter(afterCount + (beforeCount - beforeRows.length));
+  } else if (afterRows.length < afterCount && beforeRows.length === beforeCount) {
+    beforeRows = await fetchBefore(beforeCount + (afterCount - afterRows.length));
+  }
+
+  return attachGenreBadges(db, [...beforeRows, ...afterRows]);
 }
 
 export interface OneshotSitemapEntry {

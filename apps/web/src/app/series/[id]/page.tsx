@@ -8,7 +8,7 @@ import { SeriesActions } from "@/components/SeriesActions";
 import { SeriesThumbnailLink } from "@/components/SeriesThumbnailLink";
 import { getDb } from "@/lib/db";
 import { listGenres } from "@/lib/genres";
-import { getOneshotById, getOneshotsBySource, type OneshotListItem } from "@/lib/oneshots";
+import { getOneshotById, getOneshotsAroundInSource, type OneshotListItem } from "@/lib/oneshots";
 import { getSourceFaviconUrl, getSourceName } from "@/lib/sources";
 import styles from "./page.module.css";
 
@@ -78,7 +78,11 @@ export default async function SeriesDetailPage({ params }: SeriesDetailPageProps
 
   const sourceName = getSourceName(item.sourceKey);
   const faviconUrl = getSourceFaviconUrl(item.sourceKey);
-  const recommendations = await getOneshotsBySource(item.sourceKey, item.id);
+  const recommendations = await getOneshotsAroundInSource(item.sourceKey, {
+    publishedAt: item.publishedAt,
+    title: item.title,
+    id: item.id,
+  });
 
   return (
     <main className={styles.main}>

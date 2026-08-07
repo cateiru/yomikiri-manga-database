@@ -443,6 +443,15 @@
       "favicon": "/favicons/rimacomiplus.png"
     },
     {
+      "key": "bibibi-comic",
+      "name": "ビビビコミック",
+      "listUrls": ["https://bibibi-comic.com/category/manga/oneShot/1"],
+      "siteUrl": "https://bibibi-comic.com/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/bibibi-comic.png"
+    },
+    {
       "key": "ciao",
       "name": "ちゃおプラス",
       "listUrls": ["https://ciao.shogakukan.co.jp/comics/search/keyword/166"],

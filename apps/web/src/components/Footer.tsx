@@ -7,9 +7,7 @@ export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
-        <p>
-          © {year} <a href="https://cateiru.com">cateiru</a>
-        </p>
+        <p>© {year} yomikiri-manga-database</p>
         <nav className={styles.nav}>
           <Link href="/rss.xml">RSS</Link>
           <Link href="/privacy">プライバシーポリシー</Link>

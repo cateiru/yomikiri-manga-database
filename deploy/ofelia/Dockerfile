@@ -3,5 +3,5 @@
 # job-local から `docker compose run` を叩けるようにするための最小構成。
 FROM mcuadros/ofelia:v3.0.8
 
-COPY --from=docker:29.7.1-cli-alpine3.24 /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker:29.7.1-cli-alpine3.24 /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose
+COPY --from=docker:29.7.2-cli-alpine3.24 /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker:29.7.2-cli-alpine3.24 /usr/local/libexec/docker/cli-plugins/docker-compose /usr/local/libexec/docker/cli-plugins/docker-compose

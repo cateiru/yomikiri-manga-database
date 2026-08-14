@@ -470,6 +470,15 @@
       "parser": "manga-one",
       "enabled": true,
       "favicon": "/favicons/manga-one.png"
+    },
+    {
+      "key": "manga-up",
+      "name": "マンガUP！",
+      "listUrls": ["https://www.manga-up.com/genres/157"],
+      "siteUrl": "https://www.manga-up.com/",
+      "parser": "manga-up",
+      "enabled": true,
+      "favicon": "/favicons/manga-up.png"
     }
   ]
 }

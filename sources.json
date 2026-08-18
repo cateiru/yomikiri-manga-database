@@ -470,6 +470,15 @@
       "parser": "manga-one",
       "enabled": true,
       "favicon": "/favicons/manga-one.png"
+    },
+    {
+      "key": "mangabu",
+      "name": "MANGABU！",
+      "listUrls": ["https://mangabu.jp/category/manga/oneShot/1"],
+      "siteUrl": "https://mangabu.jp/",
+      "parser": "comici",
+      "enabled": true,
+      "favicon": "/favicons/mangabu.png"
     }
   ]
 }

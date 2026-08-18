@@ -11,9 +11,15 @@ describe("loadSources", () => {
     expect(sources.length).toBeGreaterThan(0);
     for (const source of sources) {
       expect(source.key.length).toBeGreaterThan(0);
-      expect(["gigaviewer", "magapoke", "comic-walker", "comici", "ciao", "manga-one"]).toContain(
-        source.parser,
-      );
+      expect([
+        "gigaviewer",
+        "magapoke",
+        "comic-walker",
+        "comici",
+        "ciao",
+        "manga-one",
+        "comic-fuz",
+      ]).toContain(source.parser);
     }
   });
 

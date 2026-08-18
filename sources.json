@@ -479,6 +479,15 @@
       "parser": "comici",
       "enabled": true,
       "favicon": "/favicons/mangabu.png"
+    },
+    {
+      "key": "comic-fuz",
+      "name": "COMIC FUZ",
+      "listUrls": ["https://comic-fuz.com/manga/tag/17"],
+      "siteUrl": "https://comic-fuz.com/",
+      "parser": "comic-fuz",
+      "enabled": true,
+      "favicon": "/favicons/comic-fuz.png"
     }
   ]
 }

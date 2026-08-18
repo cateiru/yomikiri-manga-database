@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<title>サンプル作品1｜サンプルコミック</title>
+<meta property="og:image" content="https://example.com/thum/00010001_kv_sp.jpg" />
+</head>
+<body>
+<main class="main-container">
+  <div class="comic-main-container">
+    <div class="comic-main-left">
+      <div class="comic-main-thum-wrapper">
+        <img loading="lazy" class="thum only-sp" src="https://example.com/thum/00010001_kv_sp.jpg" alt="サンプル作品1" title="サンプル作品1"/>
+        <img loading="lazy" class="thum only-pc" src="https://example.com/thum/00010001_kv.jpg" alt="サンプル作品1" title="サンプル作品1"/>
+      </div>
+    </div>
+    <div class="comic-main-right">
+      <h1 class="comic-title">サンプル作品1</h1>
+      <ul class="author-list">
+        <li class="author"><a href="/author/sample1">サンプル作者1</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="book-product-wrapper">
+    <div class="book-product-list">
+      <a id="product-1" class="book-product-list-item" href="/product/00010001">
+        <div class="book-product-list-item-meta-wrapper">
+          <h4 class="title">読み切り</h4>
+          <div class="book-product-list-item-meta-bottom">
+            <div class="right">
+              <p class="update-date">2026/05/15</p>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div class="layout-book-section other-book-popular">
+    <div class="book-list use-keyvisual">
+      <!-- 「よく読まれている作品」のレコメンドカードにも .author-list が含まれるため、
+           本編の作者抽出がここに漏れ出さないことを確認する -->
+      <div class="book-list-item">
+        <div class="book-list-item-inner">
+          <a class="book-list-item-thum-wrapper" href="/content/00090001"></a>
+          <div class="book-list-item-meta-wrapper">
+            <div>
+              <a href="/content/00090001"><h3 class="title">おすすめ作品</h3></a>
+              <ul class="author-list">
+                <li class="author"><a href="/author/other">別の作者</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

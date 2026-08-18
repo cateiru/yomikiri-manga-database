@@ -2,6 +2,8 @@ import type { CheerioAPI } from "cheerio";
 import type { Source } from "../config/sources.js";
 import { ciaoParser } from "./ciao/index.js";
 import { extractViewerDetail as extractCiaoDetail } from "./ciao/viewerDetail.js";
+import { comicBoostParser } from "./comic-boost/index.js";
+import { extractViewerDetail as extractComicBoostDetail } from "./comic-boost/viewerDetail.js";
 import { comicFuzParser } from "./comic-fuz/index.js";
 import { extractViewerDetail as extractComicFuzDetail } from "./comic-fuz/viewerDetail.js";
 import { comicWalkerParser } from "./comic-walker/index.js";
@@ -33,6 +35,8 @@ export function getParser(source: Source): Parser {
       return mangaOneParser;
     case "comic-fuz":
       return comicFuzParser;
+    case "comic-boost":
+      return comicBoostParser;
   }
 }
 
@@ -61,5 +65,7 @@ export function extractViewerDetail(
       );
     case "comic-fuz":
       return extractComicFuzDetail($, viewerUrl);
+    case "comic-boost":
+      return extractComicBoostDetail($, viewerUrl);
   }
 }

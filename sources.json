@@ -488,6 +488,15 @@
       "parser": "comic-fuz",
       "enabled": true,
       "favicon": "/favicons/comic-fuz.png"
+    },
+    {
+      "key": "comic-boost",
+      "name": "comicブースト",
+      "listUrls": ["https://comic-boost.com/genre/3"],
+      "siteUrl": "https://comic-boost.com/",
+      "parser": "comic-boost",
+      "enabled": true,
+      "favicon": "/favicons/comic-boost.png"
     }
   ]
 }

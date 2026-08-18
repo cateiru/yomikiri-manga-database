@@ -19,6 +19,7 @@ describe("loadSources", () => {
         "ciao",
         "manga-one",
         "comic-fuz",
+        "comic-boost",
       ]).toContain(source.parser);
     }
   });

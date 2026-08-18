@@ -14,6 +14,7 @@ const sourceSchema = z.object({
     "ciao",
     "manga-one",
     "comic-fuz",
+    "comic-boost",
   ]),
   enabled: z.boolean(),
   favicon: z.string(),

@@ -61,7 +61,8 @@
             "comici",
             "ciao",
             "manga-one",
-            "comic-fuz"
+            "comic-fuz",
+            "comic-boost"
           ],
           "description": "使用するパーサー種別"
         },

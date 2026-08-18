@@ -8,13 +8,12 @@ describe("comic-fuz/extractViewerDetail", () => {
     const html = loadFixture("comic-fuz-viewer");
     const $ = cheerio.load(html);
 
-    const detail = extractViewerDetail($, "https://comic-fuz.com/manga/2193");
+    const detail = extractViewerDetail($, "https://comic-fuz.com/manga/10001");
 
     expect(detail).toEqual({
-      title: "彼女のスキは伝わらない",
-      author: "きむる",
-      thumbnailUrl:
-        "https://img.comic-fuz.com/c/1xuC54/bv.webp?h=VD6QzWL1xqn4MLXU-Fg1TA&e=5000000000",
+      title: "サンプル読切1",
+      author: "サンプル作者",
+      thumbnailUrl: "https://img.comic-fuz.com/c/sample/thumbnail.webp?h=sampleHash&e=5000000000",
       publishedAt: new Date(Date.UTC(2020, 7, 11)),
       year: 2020,
     });
@@ -24,7 +23,7 @@ describe("comic-fuz/extractViewerDetail", () => {
     const html = loadFixture("comic-fuz-viewer-anthology");
     const $ = cheerio.load(html);
 
-    const detail = extractViewerDetail($, "https://comic-fuz.com/manga/3247");
+    const detail = extractViewerDetail($, "https://comic-fuz.com/manga/10003");
 
     expect(detail).toBeNull();
   });

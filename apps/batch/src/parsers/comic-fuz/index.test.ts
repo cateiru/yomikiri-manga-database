@@ -34,8 +34,8 @@ describe("comic-fuz/collectUrls", () => {
     });
 
     expect(items).toEqual([
-      { viewerUrl: "https://comic-fuz.com/manga/2193" },
-      { viewerUrl: "https://comic-fuz.com/manga/3965" },
+      { viewerUrl: "https://comic-fuz.com/manga/10001" },
+      { viewerUrl: "https://comic-fuz.com/manga/10002" },
     ]);
     expect(fetchAllowedRenderedHtml).toHaveBeenCalledTimes(1);
   });

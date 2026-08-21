@@ -497,6 +497,15 @@
       "parser": "comic-boost",
       "enabled": true,
       "favicon": "/favicons/comic-boost.png"
+    },
+    {
+      "key": "flowercomics",
+      "name": "フラコミlike!",
+      "listUrls": ["https://flowercomics.jp/rensai/one-shot"],
+      "siteUrl": "https://flowercomics.jp/",
+      "parser": "flowercomics",
+      "enabled": true,
+      "favicon": "/favicons/flowercomics.png"
     }
   ]
 }

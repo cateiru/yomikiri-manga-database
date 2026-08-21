@@ -10,6 +10,8 @@ import { comicWalkerParser } from "./comic-walker/index.js";
 import { extractViewerDetail as extractComicWalkerDetail } from "./comic-walker/viewerDetail.js";
 import { comiciParser } from "./comici/index.js";
 import { extractViewerDetail as extractComiciDetail } from "./comici/viewerDetail.js";
+import { flowercomicsParser } from "./flowercomics/index.js";
+import { extractViewerDetail as extractFlowercomicsDetail } from "./flowercomics/viewerDetail.js";
 import { assertSupportedSources, gigaviewerParser } from "./gigaviewer/index.js";
 import { extractViewerDetail as extractGigaviewerDetail } from "./gigaviewer/viewerDetail.js";
 import { magapokeParser } from "./magapoke/index.js";
@@ -37,6 +39,8 @@ export function getParser(source: Source): Parser {
       return comicFuzParser;
     case "comic-boost":
       return comicBoostParser;
+    case "flowercomics":
+      return flowercomicsParser;
   }
 }
 
@@ -67,5 +71,7 @@ export function extractViewerDetail(
       return extractComicFuzDetail($, viewerUrl);
     case "comic-boost":
       return extractComicBoostDetail($, viewerUrl);
+    case "flowercomics":
+      return extractFlowercomicsDetail($, viewerUrl);
   }
 }

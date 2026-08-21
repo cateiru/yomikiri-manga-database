@@ -21,6 +21,7 @@ describe("loadSources", () => {
         "comic-fuz",
         "comic-boost",
         "flowercomics",
+        "kirapo",
       ]).toContain(source.parser);
     }
   });

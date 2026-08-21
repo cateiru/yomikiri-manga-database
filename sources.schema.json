@@ -63,7 +63,8 @@
             "manga-one",
             "comic-fuz",
             "comic-boost",
-            "flowercomics"
+            "flowercomics",
+            "kirapo"
           ],
           "description": "使用するパーサー種別"
         },

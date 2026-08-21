@@ -35,6 +35,8 @@ export interface CollectUrlsDeps {
 }
 
 export interface FetchViewerDetailDeps {
+  /** CollectUrlsDeps.fetchAllowedHtml と同じ挙動・レート制限を詳細取得フェーズ向けに提供する */
+  fetchAllowedHtml(url: string): Promise<string>;
   /** CollectUrlsDeps.fetchAllowedRenderedHtml と同じ挙動・レート制限を詳細取得フェーズ向けに提供する */
   fetchAllowedRenderedHtml(url: string, waitForSelector: string): Promise<string>;
 }

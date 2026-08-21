@@ -506,6 +506,15 @@
       "parser": "flowercomics",
       "enabled": true,
       "favicon": "/favicons/flowercomics.png"
+    },
+    {
+      "key": "kirapo",
+      "name": "きら星ポータル きらポ",
+      "listUrls": ["https://kirapo.jp/titles?category=2"],
+      "siteUrl": "https://kirapo.jp/",
+      "parser": "kirapo",
+      "enabled": true,
+      "favicon": "/favicons/kirapo.png"
     }
   ]
 }

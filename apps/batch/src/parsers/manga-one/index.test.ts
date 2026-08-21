@@ -78,6 +78,7 @@ describe("manga-one/fetchViewerDetail", () => {
     });
 
     const detail = await mangaOneParser.fetchViewerDetail?.(viewerUrl, {
+      fetchAllowedHtml: vi.fn(),
       fetchAllowedRenderedHtml,
     });
 

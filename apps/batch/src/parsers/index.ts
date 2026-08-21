@@ -14,6 +14,7 @@ import { flowercomicsParser } from "./flowercomics/index.js";
 import { extractViewerDetail as extractFlowercomicsDetail } from "./flowercomics/viewerDetail.js";
 import { assertSupportedSources, gigaviewerParser } from "./gigaviewer/index.js";
 import { extractViewerDetail as extractGigaviewerDetail } from "./gigaviewer/viewerDetail.js";
+import { kirapoParser } from "./kirapo/index.js";
 import { magapokeParser } from "./magapoke/index.js";
 import { extractViewerDetail as extractMagapokeDetail } from "./magapoke/viewerDetail.js";
 import { mangaOneParser } from "./manga-one/index.js";
@@ -41,6 +42,8 @@ export function getParser(source: Source): Parser {
       return comicBoostParser;
     case "flowercomics":
       return flowercomicsParser;
+    case "kirapo":
+      return kirapoParser;
   }
 }
 
@@ -73,5 +76,13 @@ export function extractViewerDetail(
       return extractComicBoostDetail($, viewerUrl);
     case "flowercomics":
       return extractFlowercomicsDetail($, viewerUrl);
+    case "kirapo":
+      // きらポはビューワーページ（BinB Reader）に詳細情報を含まないため
+      // fetchViewerDetail（作品ページへの追加フェッチ）を使う。fetchDetails.ts は
+      // parser.fetchViewerDetail の有無でこの関数自体を呼ばないため、誤って
+      // 呼ばれた場合のみ到達する
+      throw new Error(
+        "kirapo は extractViewerDetail 未対応です（fetchViewerDetail を使用してください）",
+      );
   }
 }

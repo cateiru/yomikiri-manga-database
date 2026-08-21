@@ -113,6 +113,26 @@ export async function fetchDetails(db: Db, sources: Source[]): Promise<SourceDet
       if (parser.fetchViewerDetail) {
         detail = await parser.fetchViewerDetail(item.viewerUrl, {
           // parser.fetchViewerDetail が呼ぶ URL ごとに robots.txt チェックと
+          // 通常レート制限（呼び出しのたびに間隔を空ける）を行う
+          async fetchAllowedHtml(url) {
+            const requestPath = new URL(url).pathname;
+            if (!robots.isAllowed(requestPath)) {
+              throw new Error(`robots.txt により ${url} へのアクセスが拒否されています`);
+            }
+
+            const lastAccess = lastAccessBySource.get(sourceKey);
+            if (lastAccess !== undefined) {
+              const elapsed = Date.now() - lastAccess;
+              if (elapsed < REQUEST_INTERVAL_MS) {
+                await sleep(REQUEST_INTERVAL_MS - elapsed);
+              }
+            }
+
+            const html = await fetchHtml(url);
+            lastAccessBySource.set(sourceKey, Date.now());
+            return html;
+          },
+          // parser.fetchViewerDetail が呼ぶ URL ごとに robots.txt チェックと
           // headless 用レート制限（呼び出しのたびに間隔を空ける）を行う
           async fetchAllowedRenderedHtml(url, waitForSelector) {
             const requestPath = new URL(url).pathname;
